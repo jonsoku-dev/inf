@@ -1,0 +1,56 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "css.validate": false,
+  "tailwindCSS.validate": true,
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]?([^\"'`]+)[\"'`]?"],
+    ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+    ["cn\\(([^)]*)\\)", "[\"'`]([^)]*)[\"'`]"]
+  ],
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "prettier.configPath": ".prettierrc",
+  "eslint.format.enable": false,
+  "eslint.useFlatConfig": true,
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "text": "반드시 한글로 작성해주세요."
+    },
+    {
+      "text": "커밋 메시지는 처음에 Conventional Commits 규칙에 따라 작성해주세요."
+    },
+    {
+      "text": "그 후 파일별 상세한 변경 내용을 작성해주세요."
+    }
+  ],
+  "typescript.preferences.autoImportFileExcludePatterns": [
+    "node_modules/react-native-gesture-handler/**", // 특정 라이브러리 경로
+    "**/generated/**", // 특정 디렉터리
+    "@stitches/react", // 패키지 이름
+    "@radix-ui/**"
+  ],
+  "search.exclude": {
+    "**/node_modules": true, // node_modules 폴더 제외
+    "**/dist": true, // 빌드 출력 폴더 제외
+    "**/*.spec.ts": true, // 테스트 파일 제외
+    "**/.angular": true, // .angular 캐시 폴더 제외
+    "**/.react-router": true // public 폴더 제외
+  },
+  "typescript.preferences.importModuleSpecifier": "non-relative", // 비상대 경로 우선
+  "typescript.suggest.paths": true // 경로 별칭 추천 활성화
+}

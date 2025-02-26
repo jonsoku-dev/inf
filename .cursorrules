@@ -1,0 +1,95 @@
+Remix React Router TypeScript Supabase
+You are an expert in TypeScript, Node.js, React Router, React, Remix, Shadcn UI, Radix UI, Tailwind and Supabase.
+
+Key Principles
+
+- Write concise, technical TypeScript code with accurate examples.
+- Use functional and declarative programming patterns; avoid classes.
+- Prefer iteration and modularization over code duplication.
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
+- Structure files: exported component, subcomponents, helpers, static content, types.
+
+Naming Conventions
+
+- Use lowercase with dashes for directories (e.g., components/auth-wizard).
+- Favor named exports for components.
+
+TypeScript Usage
+
+- Use TypeScript for all code; prefer interfaces over types.
+- Avoid enums; use maps instead.
+- Use functional components with TypeScript interfaces.
+
+Syntax and Formatting
+
+- Use the "function" keyword for pure functions.
+- Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+- Use declarative JSX.
+
+UI and Styling
+
+- Use Shadcn UI, Radix, and Tailwind for components and styling.
+
+Key Conventions
+
+- Don't import anything from Radix UI. Always import UI components from Shadcn UI.
+- Don't import anything from Remix. Any @remix-run import should be imported from "react-router".
+- When creating a new page always export a loader, action, and meta function.
+- Route types should be imported like this: `import type { Route } from "./+types/...";`
+- `useLoaderData` does not exist anymore. Instead, components receive Router.ComponentProps type param that contains loaderData.
+- `useActionData` does not exist anymore. Instead, components receive Router.ComponentProps type param that contains actionData.
+- Never use `useLoaderData` or `useActionData` in page components.
+- `loader` function takes a Route.LoaderArgs type param.
+- `action` function takes a Route.ActionArgs type param.
+- `meta` function takes a Route.MetaFunction type param.
+- `meta` returns MetaFunction type.
+- `json` does not exists anymore. Return plain objects i.e `export function loader({ request }: Route.LoaderArgs) { return { } }`
+- Use `data` when returning a response with a status code, otherwise return plain objects.
+- Apply the prop as flat as possible.
+- Always response language is Korean.
+- `import type { Route } from "./+types/...";` should be used in all the route files.
+
+
+LINE OFFICIAL ACCOUNT와 웹 플랫폼을 통해 한국과 일본의 인플루언서와 광고주를 연결하는 시스템을 구축합니다. 광고주는 플랫폼에 광고 안건을 등록하고, 관리자가 이를 검토하여 공개 여부를 결정합니다. 등록된 인플루언서들은 안건에 대한 알림을 받고 신청할 수 있으며, 이후 협업 프로세스가 진행됩니다. 초기 모델은 단순하게 설계하되, 추후 기능 확장과 성장이 가능하도록 유연성을 확보합니다.
+
+**주요 기능:**
+
+- **광고주 안건 등록:** 광고주는 웹 플랫폼에서 Form 형식으로 안건을 등록하며, 필수 항목은 캠페인 제목, 설명, 대상 시장(한국, 일본, 또는 양국), 예산, 기간 등이 포함됩니다.
+- **관리자 검토 및 상태 관리:** 관리자는 등록된 안건을 검토하고, 적합하면 "공개(Open)" 상태로 전환하며, 부적합하면 "비공개(Close)"로 처리하거나 수정 요청을 보냅니다.
+- **인플루언서 알림 및 신청:** 공개된 안건은 LINE OFFICIAL ACCOUNT를 통해 등록된 인플루언서들에게 알림으로 전송됩니다. 인플루언서들은 알림을 확인하고, 웹 플랫폼에서 관심 있는 안건에 신청할 수 있습니다.
+- **프로세스 시작:** 인플루언서의 신청이 접수되면, 광고주와 인플루언서 간 협의 및 협업이 시작됩니다. 플랫폼은 이 과정을 기록하며, 필요 시 지원 역할을 수행합니다.
+
+**설계 원칙:**
+
+- **단순성:** 초기에는 핵심 기능만 포함하여 빠르게 구현 가능하도록 합니다.
+- **확장성:** 추후 다양한 안건 유형, 자동화 기능, 결제 시스템 등을 추가할 수 있는 기반을 마련합니다.
+- **다국어 지원:** 한국어, 일본어, 영어를 지원하여 양국 사용자를 수용합니다.
+
+**크로스보더 측면:**
+
+- 광고주가 캠페인의 대상 시장을 한국, 일본, 또는 양국으로 지정할 수 있습니다.
+- 인플루언서가 주요 시장 또는 위치를 지정할 수 있습니다.
+- 알림은 캠페인의 대상 시장과 일치하는 인플루언서에게만 전송됩니다.
+
+---
+
+---
+
+### 보고서
+
+2025년 2월 25일 기준으로, LINE OFFICIAL ACCOUNT와 웹 플랫폼을 활용한 한국과 일본 간 인플루언서 마케팅 플랫폼의 사업 기획서를 작성하기 위해 시장 분석, 경쟁 환경, 수익 모델, 그리고 운영 전략을 포함한 세부 내용을 검토하였습니다. 이 보고서는 플랫폼의 초기 설계와 장기적인 확장 가능성을 고려하여 작성되었으며, 한국과 일본 시장에 초점을 맞추었습니다.
+
+### 시장 분석 및 경쟁 환경
+
+한국의 인플루언서 마케팅 플랫폼 시장은 빠르게 성장하고 있으며, 2025년에는 약 4억 8924만 달러(USD)로 평가되었으며, 2030년까지 거의 두 배로 증가할 것으로 예상됩니다 ([Influencer Marketing in South Korea in 2025 - InterAd©](https://www.interad.com/en/insights/influencer-marketing-in-korea)). 일본 시장에서도 인플루언서 마케팅이 활발히 이루어지고 있으며, LINE은 일본에서 가장 인기 있는 소셜 플랫폼 중 하나로, 2023년 기준으로 인구의 70% 이상이 사용하고 있습니다 ([Line (software) - Wikipedia](https://en.wikipedia.org/wiki/Line_%28software%29)).
+
+경쟁 환경에서는 Naver의 Influencer Center, Collabstr, 그리고 여러 마케팅 에이전시가 활동 중입니다. 특히 Naver는 브랜드 커넥트 기능을 통해 기업이 인플루언서를 필터링할 수 있는 기능을 제공하며, 이는 강력한 경쟁자입니다 ([Influencer Marketing in South Korea in 2025 - InterAd©](https://www.interad.com/en/insights/influencer-marketing-in-korea)). 그러나 한국과 일본 간 크로스보더 협력을 전문으로 하는 플랫폼은 거의 없으며, 이는 시장 틈새를 노릴 수 있는 기회로 보입니다.
+
+### 플랫폼 설계 및 기능
+
+플랫폼의 초기 모델은 단순성을 유지하면서도 확장 가능성을 고려하여 설계되었습니다. 주요 기능은 다음과 같습니다:
+
+- **광고주 안건 등록:** 광고주는 웹 플랫폼에서 Form 형식으로 안건을 등록하며, 필수 항목은 캠페인 제목, 설명, 대상 시장(한국, 일본, 양국), 예산, 기간, 인플루언서 요구 사항 등이 포함됩니다. 이는 기존 인플루언서 마케팅 플랫폼의 표준 필드와 유사합니다 ([Influencer Marketing Platform | Upfluence](https://www.upfluence.com/)).
+- **관리자 검토 및 상태 관리:** 관리자는 안건을 검토하여 공개(Open) 또는 비공개(Close)로 결정하며, 기준은 안건의 적법성, 완성도, 플랫폼 정책 준수 등이 될 수 있습니다.
+- **인플루언서 알림 및 신청:** 공개된 안건은 LINE OFFICIAL ACCOUNT를 통해 인플루언서들에게 알림으로 전송되며, 인플루언서는 웹 플랫폼에서 신청할 수 있습니다. LINE Messaging API를 통해 특정 사용자에게 메시지를 보낼 수 있어, 효율적인 알림 시스템을 구축할 수 있습니다 ([Send messages | LINE Developers](https://developers.line.biz/en/docs/messaging-api/sending-messages/)).
+- **프로세스 시작:** 신청이 접수되면 광고주와 인플루언서 간 협업이 시작되며, 플랫폼은 초기 단계에서는 연결만 지원하고, 추후 협업 추적 기능을 추가할 계획입니다.
