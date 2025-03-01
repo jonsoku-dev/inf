@@ -1,5 +1,5 @@
 {
-  "id": "911903cf-8739-4a3a-a99a-0b9bdc2bd947",
+  "id": "3abc2f72-593a-4e53-9dde-7ee4cf110411",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -32,8 +32,8 @@
           "type": "application_status",
           "typeSchema": "public",
           "primaryKey": false,
-          "notNull": false,
-          "default": "'pending'"
+          "notNull": true,
+          "default": "'PENDING'"
         },
         "message": {
           "name": "message",
@@ -141,7 +141,32 @@
         },
         "budget": {
           "name": "budget",
-          "type": "numeric(10, 2)",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "campaign_type": {
+          "name": "campaign_type",
+          "type": "campaign_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requirements": {
+          "name": "requirements",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "start_date": {
+          "name": "start_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         },
@@ -150,8 +175,29 @@
           "type": "campaign_status",
           "typeSchema": "public",
           "primaryKey": false,
+          "notNull": true,
+          "default": "'DRAFT'"
+        },
+        "is_negotiable": {
+          "name": "is_negotiable",
+          "type": "boolean",
+          "primaryKey": false,
           "notNull": false,
-          "default": "'draft'"
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         },
         "target_market": {
           "name": "target_market",
@@ -159,23 +205,168 @@
           "primaryKey": false,
           "notNull": true
         },
-        "requirements": {
-          "name": "requirements",
-          "type": "text",
+        "categories": {
+          "name": "categories",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         },
-        "period_start": {
-          "name": "period_start",
+        "min_followers": {
+          "name": "min_followers",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "max_applications": {
+          "name": "max_applications",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "current_applications": {
+          "name": "current_applications",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "is_urgent": {
+          "name": "is_urgent",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "preferred_gender": {
+          "name": "preferred_gender",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preferred_age_range": {
+          "name": "preferred_age_range",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location_requirements": {
+          "name": "location_requirements",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "keywords": {
+          "name": "keywords",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "campaigns_advertiser_id_profiles_profile_id_fk": {
+          "name": "campaigns_advertiser_id_profiles_profile_id_fk",
+          "tableFrom": "campaigns",
+          "tableTo": "profiles",
+          "columnsFrom": [
+            "advertiser_id"
+          ],
+          "columnsTo": [
+            "profile_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.influencer_profiles": {
+      "name": "influencer_profiles",
+      "schema": "",
+      "columns": {
+        "profile_id": {
+          "name": "profile_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "categories": {
+          "name": "categories",
+          "type": "influencer_category[]",
           "primaryKey": false,
           "notNull": true
         },
-        "period_end": {
-          "name": "period_end",
+        "instagram_handle": {
+          "name": "instagram_handle",
           "type": "text",
           "primaryKey": false,
+          "notNull": false
+        },
+        "youtube_handle": {
+          "name": "youtube_handle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tiktok_handle": {
+          "name": "tiktok_handle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "blog_url": {
+          "name": "blog_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "followers_count": {
+          "name": "followers_count",
+          "type": "jsonb",
+          "primaryKey": false,
           "notNull": true
+        },
+        "gender": {
+          "name": "gender",
+          "type": "gender",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "birth_year": {
+          "name": "birth_year",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location": {
+          "name": "location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "introduction": {
+          "name": "introduction",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "portfolio_urls": {
+          "name": "portfolio_urls",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_public": {
+          "name": "is_public",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
         },
         "created_at": {
           "name": "created_at",
@@ -194,12 +385,175 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "campaigns_advertiser_id_profiles_profile_id_fk": {
-          "name": "campaigns_advertiser_id_profiles_profile_id_fk",
-          "tableFrom": "campaigns",
+        "influencer_profiles_profile_id_profiles_profile_id_fk": {
+          "name": "influencer_profiles_profile_id_profiles_profile_id_fk",
+          "tableFrom": "influencer_profiles",
           "tableTo": "profiles",
           "columnsFrom": [
-            "advertiser_id"
+            "profile_id"
+          ],
+          "columnsTo": [
+            "profile_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.influencer_stats": {
+      "name": "influencer_stats",
+      "schema": "",
+      "columns": {
+        "stat_id": {
+          "name": "stat_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "profile_id": {
+          "name": "profile_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "platform": {
+          "name": "platform",
+          "type": "sns_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recorded_at": {
+          "name": "recorded_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "followers_count": {
+          "name": "followers_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "engagement_rate": {
+          "name": "engagement_rate",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avg_likes": {
+          "name": "avg_likes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avg_comments": {
+          "name": "avg_comments",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avg_views": {
+          "name": "avg_views",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "influencer_stats_profile_id_influencer_profiles_profile_id_fk": {
+          "name": "influencer_stats_profile_id_influencer_profiles_profile_id_fk",
+          "tableFrom": "influencer_stats",
+          "tableTo": "influencer_profiles",
+          "columnsFrom": [
+            "profile_id"
+          ],
+          "columnsTo": [
+            "profile_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.influencer_verifications": {
+      "name": "influencer_verifications",
+      "schema": "",
+      "columns": {
+        "verification_id": {
+          "name": "verification_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "profile_id": {
+          "name": "profile_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "platform": {
+          "name": "platform",
+          "type": "sns_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "verified_at": {
+          "name": "verified_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "followers_count": {
+          "name": "followers_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "engagement_rate": {
+          "name": "engagement_rate",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_valid": {
+          "name": "is_valid",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "next_verification_due": {
+          "name": "next_verification_due",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "influencer_verifications_profile_id_influencer_profiles_profile_id_fk": {
+          "name": "influencer_verifications_profile_id_influencer_profiles_profile_id_fk",
+          "tableFrom": "influencer_verifications",
+          "tableTo": "influencer_profiles",
+          "columnsFrom": [
+            "profile_id"
           ],
           "columnsTo": [
             "profile_id"
@@ -292,6 +646,236 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.proposal_applications": {
+      "name": "proposal_applications",
+      "schema": "",
+      "columns": {
+        "application_id": {
+          "name": "application_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "proposal_id": {
+          "name": "proposal_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "advertiser_id": {
+          "name": "advertiser_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "proposal_application_status": {
+          "name": "proposal_application_status",
+          "type": "proposal_application_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'PENDING'"
+        },
+        "applied_at": {
+          "name": "applied_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "proposal_applications_proposal_id_influencer_proposals_proposal_id_fk": {
+          "name": "proposal_applications_proposal_id_influencer_proposals_proposal_id_fk",
+          "tableFrom": "proposal_applications",
+          "tableTo": "influencer_proposals",
+          "columnsFrom": [
+            "proposal_id"
+          ],
+          "columnsTo": [
+            "proposal_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "proposal_applications_advertiser_id_profiles_profile_id_fk": {
+          "name": "proposal_applications_advertiser_id_profiles_profile_id_fk",
+          "tableFrom": "proposal_applications",
+          "tableTo": "profiles",
+          "columnsFrom": [
+            "advertiser_id"
+          ],
+          "columnsTo": [
+            "profile_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.influencer_proposals": {
+      "name": "influencer_proposals",
+      "schema": "",
+      "columns": {
+        "proposal_id": {
+          "name": "proposal_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "influencer_id": {
+          "name": "influencer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "desired_budget": {
+          "name": "desired_budget",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "target_market": {
+          "name": "target_market",
+          "type": "target_market",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content_type": {
+          "name": "content_type",
+          "type": "content_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expected_deliverables": {
+          "name": "expected_deliverables",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "available_period_start": {
+          "name": "available_period_start",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "available_period_end": {
+          "name": "available_period_end",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "categories": {
+          "name": "categories",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "keywords": {
+          "name": "keywords",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "portfolio_samples": {
+          "name": "portfolio_samples",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_negotiable": {
+          "name": "is_negotiable",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "preferred_industry": {
+          "name": "preferred_industry",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "proposal_status": {
+          "name": "proposal_status",
+          "type": "proposal_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'DRAFT'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "influencer_proposals_influencer_id_profiles_profile_id_fk": {
+          "name": "influencer_proposals_influencer_id_profiles_profile_id_fk",
+          "tableFrom": "influencer_proposals",
+          "tableTo": "profiles",
+          "columnsFrom": [
+            "influencer_id"
+          ],
+          "columnsTo": [
+            "profile_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.profiles": {
       "name": "profiles",
       "schema": "",
@@ -320,7 +904,7 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
-          "default": "'advertiser'"
+          "default": "'ADVERTISER'"
         },
         "line_user_id": {
           "name": "line_user_id",
@@ -372,29 +956,120 @@
       "name": "application_status",
       "schema": "public",
       "values": [
-        "approved",
-        "rejected",
-        "completed",
-        "pending"
+        "PENDING",
+        "ACCEPTED",
+        "REJECTED",
+        "COMPLETED",
+        "CANCELLED"
       ]
     },
     "public.campaign_status": {
       "name": "campaign_status",
       "schema": "public",
       "values": [
-        "draft",
-        "published",
-        "closed",
-        "completed"
+        "DRAFT",
+        "PUBLISHED",
+        "CLOSED",
+        "CANCELLED",
+        "COMPLETED"
+      ]
+    },
+    "public.campaign_type": {
+      "name": "campaign_type",
+      "schema": "public",
+      "values": [
+        "INSTAGRAM",
+        "YOUTUBE",
+        "TIKTOK",
+        "BLOG"
+      ]
+    },
+    "public.gender": {
+      "name": "gender",
+      "schema": "public",
+      "values": [
+        "MALE",
+        "FEMALE",
+        "OTHER"
+      ]
+    },
+    "public.influencer_category": {
+      "name": "influencer_category",
+      "schema": "public",
+      "values": [
+        "FASHION",
+        "BEAUTY",
+        "FOOD",
+        "TRAVEL",
+        "TECH",
+        "GAME",
+        "ENTERTAINMENT",
+        "LIFESTYLE",
+        "PARENTING",
+        "PETS",
+        "OTHER"
+      ]
+    },
+    "public.sns_type": {
+      "name": "sns_type",
+      "schema": "public",
+      "values": [
+        "INSTAGRAM",
+        "YOUTUBE",
+        "TIKTOK",
+        "BLOG"
+      ]
+    },
+    "public.content_type": {
+      "name": "content_type",
+      "schema": "public",
+      "values": [
+        "INSTAGRAM_POST",
+        "INSTAGRAM_REEL",
+        "INSTAGRAM_STORY",
+        "YOUTUBE_SHORT",
+        "YOUTUBE_VIDEO",
+        "TIKTOK_VIDEO",
+        "BLOG_POST"
+      ]
+    },
+    "public.proposal_application_status": {
+      "name": "proposal_application_status",
+      "schema": "public",
+      "values": [
+        "PENDING",
+        "ACCEPTED",
+        "REJECTED",
+        "COMPLETED",
+        "CANCELLED"
+      ]
+    },
+    "public.proposal_status": {
+      "name": "proposal_status",
+      "schema": "public",
+      "values": [
+        "DRAFT",
+        "PUBLISHED",
+        "CLOSED",
+        "REJECTED"
+      ]
+    },
+    "public.target_market": {
+      "name": "target_market",
+      "schema": "public",
+      "values": [
+        "KR",
+        "JP",
+        "BOTH"
       ]
     },
     "public.role": {
       "name": "role",
       "schema": "public",
       "values": [
-        "advertiser",
-        "influencer",
-        "admin"
+        "ADVERTISER",
+        "INFLUENCER",
+        "ADMIN"
       ]
     }
   },

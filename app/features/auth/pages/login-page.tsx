@@ -12,18 +12,18 @@ import AuthFormContainer from "../components/auth-form-container";
 import type { Route } from "./+types/login-page";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
-  const supabase = getServerClient(request)
+  const { supabase, headers } = getServerClient(request)
   const { data: { session } } = await supabase.auth.getSession();
 
   if (session) {
-    return redirect("/");
+    return redirect("/", { headers });
   }
 
   return {};
 };
 
 export const action = async ({ request }: Route.ActionArgs) => {
-  const supabase = getServerClient(request)
+  const { supabase, headers } = getServerClient(request);
   const formData = await request.formData();
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
@@ -45,7 +45,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
   }
 
   try {
-    const { data: authData, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -57,7 +57,9 @@ export const action = async ({ request }: Route.ActionArgs) => {
       );
     }
 
-    return redirect("/");
+    return redirect("/", {
+      headers
+    });
   } catch (error) {
     return data(
       { errors: { form: "로그인 중 오류가 발생했습니다. 다시 시도해주세요." } },

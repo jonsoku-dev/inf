@@ -1,16 +1,15 @@
 import { createBrowserClient } from "@supabase/ssr";
-import { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "database.types";
 
 export const createClient = ({
     supabaseUrl,
     supabaseKey
 }: {
-    supabaseUrl: SupabaseClient['supabaseUrl'],
-    supabaseKey: SupabaseClient['supabaseKey']
+    supabaseUrl: string,
+    supabaseKey: string
 }) => createBrowserClient<Database>(
-    supabaseUrl!,
-    supabaseKey!,
+    supabaseUrl,
+    supabaseKey,
 );
 
 export const supabase = createClient({

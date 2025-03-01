@@ -12,9 +12,7 @@ export type Database = {
       applications: {
         Row: {
           application_id: string
-          application_status:
-            | Database["public"]["Enums"]["application_status"]
-            | null
+          application_status: Database["public"]["Enums"]["application_status"]
           applied_at: string
           campaign_id: string
           influencer_id: string
@@ -23,9 +21,7 @@ export type Database = {
         }
         Insert: {
           application_id?: string
-          application_status?:
-            | Database["public"]["Enums"]["application_status"]
-            | null
+          application_status?: Database["public"]["Enums"]["application_status"]
           applied_at?: string
           campaign_id: string
           influencer_id: string
@@ -34,9 +30,7 @@ export type Database = {
         }
         Update: {
           application_id?: string
-          application_status?:
-            | Database["public"]["Enums"]["application_status"]
-            | null
+          application_status?: Database["public"]["Enums"]["application_status"]
           applied_at?: string
           campaign_id?: string
           influencer_id?: string
@@ -77,12 +71,23 @@ export type Database = {
           advertiser_id: string
           budget: number
           campaign_id: string
-          campaign_status: Database["public"]["Enums"]["campaign_status"] | null
+          campaign_status: Database["public"]["Enums"]["campaign_status"]
+          campaign_type: Database["public"]["Enums"]["campaign_type"]
+          categories: Json
           created_at: string
+          current_applications: number | null
           description: string
-          period_end: string
-          period_start: string
-          requirements: string
+          end_date: string
+          is_negotiable: boolean | null
+          is_urgent: boolean | null
+          keywords: Json
+          location_requirements: string | null
+          max_applications: number | null
+          min_followers: number | null
+          preferred_age_range: Json | null
+          preferred_gender: string | null
+          requirements: string[] | null
+          start_date: string
           target_market: string
           title: string
           updated_at: string
@@ -91,14 +96,23 @@ export type Database = {
           advertiser_id: string
           budget: number
           campaign_id?: string
-          campaign_status?:
-            | Database["public"]["Enums"]["campaign_status"]
-            | null
+          campaign_status?: Database["public"]["Enums"]["campaign_status"]
+          campaign_type: Database["public"]["Enums"]["campaign_type"]
+          categories: Json
           created_at?: string
+          current_applications?: number | null
           description: string
-          period_end: string
-          period_start: string
-          requirements: string
+          end_date: string
+          is_negotiable?: boolean | null
+          is_urgent?: boolean | null
+          keywords: Json
+          location_requirements?: string | null
+          max_applications?: number | null
+          min_followers?: number | null
+          preferred_age_range?: Json | null
+          preferred_gender?: string | null
+          requirements?: string[] | null
+          start_date: string
           target_market: string
           title: string
           updated_at?: string
@@ -107,14 +121,23 @@ export type Database = {
           advertiser_id?: string
           budget?: number
           campaign_id?: string
-          campaign_status?:
-            | Database["public"]["Enums"]["campaign_status"]
-            | null
+          campaign_status?: Database["public"]["Enums"]["campaign_status"]
+          campaign_type?: Database["public"]["Enums"]["campaign_type"]
+          categories?: Json
           created_at?: string
+          current_applications?: number | null
           description?: string
-          period_end?: string
-          period_start?: string
-          requirements?: string
+          end_date?: string
+          is_negotiable?: boolean | null
+          is_urgent?: boolean | null
+          keywords?: Json
+          location_requirements?: string | null
+          max_applications?: number | null
+          min_followers?: number | null
+          preferred_age_range?: Json | null
+          preferred_gender?: string | null
+          requirements?: string[] | null
+          start_date?: string
           target_market?: string
           title?: string
           updated_at?: string
@@ -125,6 +148,228 @@ export type Database = {
             columns: ["advertiser_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
+      influencer_profiles: {
+        Row: {
+          birth_year: number | null
+          blog_url: string | null
+          categories: Database["public"]["Enums"]["influencer_category"][]
+          created_at: string
+          followers_count: Json
+          gender: Database["public"]["Enums"]["gender"] | null
+          instagram_handle: string | null
+          introduction: string | null
+          is_public: boolean
+          location: string | null
+          portfolio_urls: string[] | null
+          profile_id: string
+          tiktok_handle: string | null
+          updated_at: string
+          youtube_handle: string | null
+        }
+        Insert: {
+          birth_year?: number | null
+          blog_url?: string | null
+          categories: Database["public"]["Enums"]["influencer_category"][]
+          created_at?: string
+          followers_count: Json
+          gender?: Database["public"]["Enums"]["gender"] | null
+          instagram_handle?: string | null
+          introduction?: string | null
+          is_public?: boolean
+          location?: string | null
+          portfolio_urls?: string[] | null
+          profile_id: string
+          tiktok_handle?: string | null
+          updated_at?: string
+          youtube_handle?: string | null
+        }
+        Update: {
+          birth_year?: number | null
+          blog_url?: string | null
+          categories?: Database["public"]["Enums"]["influencer_category"][]
+          created_at?: string
+          followers_count?: Json
+          gender?: Database["public"]["Enums"]["gender"] | null
+          instagram_handle?: string | null
+          introduction?: string | null
+          is_public?: boolean
+          location?: string | null
+          portfolio_urls?: string[] | null
+          profile_id?: string
+          tiktok_handle?: string | null
+          updated_at?: string
+          youtube_handle?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "influencer_profiles_profile_id_profiles_profile_id_fk"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
+      influencer_proposals: {
+        Row: {
+          available_period_end: string
+          available_period_start: string
+          categories: string[]
+          content_type: Database["public"]["Enums"]["content_type"]
+          created_at: string
+          description: string
+          desired_budget: number
+          expected_deliverables: string[]
+          influencer_id: string
+          is_negotiable: boolean | null
+          keywords: string[]
+          portfolio_samples: string[] | null
+          preferred_industry: string[] | null
+          proposal_id: string
+          proposal_status: Database["public"]["Enums"]["proposal_status"] | null
+          target_market: Database["public"]["Enums"]["target_market"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          available_period_end: string
+          available_period_start: string
+          categories: string[]
+          content_type: Database["public"]["Enums"]["content_type"]
+          created_at?: string
+          description: string
+          desired_budget: number
+          expected_deliverables: string[]
+          influencer_id: string
+          is_negotiable?: boolean | null
+          keywords: string[]
+          portfolio_samples?: string[] | null
+          preferred_industry?: string[] | null
+          proposal_id?: string
+          proposal_status?:
+            | Database["public"]["Enums"]["proposal_status"]
+            | null
+          target_market: Database["public"]["Enums"]["target_market"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          available_period_end?: string
+          available_period_start?: string
+          categories?: string[]
+          content_type?: Database["public"]["Enums"]["content_type"]
+          created_at?: string
+          description?: string
+          desired_budget?: number
+          expected_deliverables?: string[]
+          influencer_id?: string
+          is_negotiable?: boolean | null
+          keywords?: string[]
+          portfolio_samples?: string[] | null
+          preferred_industry?: string[] | null
+          proposal_id?: string
+          proposal_status?:
+            | Database["public"]["Enums"]["proposal_status"]
+            | null
+          target_market?: Database["public"]["Enums"]["target_market"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "influencer_proposals_influencer_id_profiles_profile_id_fk"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
+      influencer_stats: {
+        Row: {
+          avg_comments: number | null
+          avg_likes: number | null
+          avg_views: number | null
+          engagement_rate: number | null
+          followers_count: number
+          platform: Database["public"]["Enums"]["sns_type"]
+          profile_id: string
+          recorded_at: string
+          stat_id: string
+        }
+        Insert: {
+          avg_comments?: number | null
+          avg_likes?: number | null
+          avg_views?: number | null
+          engagement_rate?: number | null
+          followers_count: number
+          platform: Database["public"]["Enums"]["sns_type"]
+          profile_id: string
+          recorded_at?: string
+          stat_id?: string
+        }
+        Update: {
+          avg_comments?: number | null
+          avg_likes?: number | null
+          avg_views?: number | null
+          engagement_rate?: number | null
+          followers_count?: number
+          platform?: Database["public"]["Enums"]["sns_type"]
+          profile_id?: string
+          recorded_at?: string
+          stat_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "influencer_stats_profile_id_influencer_profiles_profile_id_fk"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_profiles"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
+      influencer_verifications: {
+        Row: {
+          engagement_rate: number | null
+          followers_count: number
+          is_valid: boolean
+          next_verification_due: string
+          platform: Database["public"]["Enums"]["sns_type"]
+          profile_id: string
+          verification_id: string
+          verified_at: string
+        }
+        Insert: {
+          engagement_rate?: number | null
+          followers_count: number
+          is_valid?: boolean
+          next_verification_due: string
+          platform: Database["public"]["Enums"]["sns_type"]
+          profile_id: string
+          verification_id?: string
+          verified_at?: string
+        }
+        Update: {
+          engagement_rate?: number | null
+          followers_count?: number
+          is_valid?: boolean
+          next_verification_due?: string
+          platform?: Database["public"]["Enums"]["sns_type"]
+          profile_id?: string
+          verification_id?: string
+          verified_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "influencer_verifications_profile_id_influencer_profiles_profile"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_profiles"
             referencedColumns: ["profile_id"]
           },
         ]
@@ -201,6 +446,57 @@ export type Database = {
         }
         Relationships: []
       }
+      proposal_applications: {
+        Row: {
+          advertiser_id: string
+          application_id: string
+          applied_at: string
+          message: string
+          proposal_application_status:
+            | Database["public"]["Enums"]["proposal_application_status"]
+            | null
+          proposal_id: string
+          updated_at: string
+        }
+        Insert: {
+          advertiser_id: string
+          application_id?: string
+          applied_at?: string
+          message: string
+          proposal_application_status?:
+            | Database["public"]["Enums"]["proposal_application_status"]
+            | null
+          proposal_id: string
+          updated_at?: string
+        }
+        Update: {
+          advertiser_id?: string
+          application_id?: string
+          applied_at?: string
+          message?: string
+          proposal_application_status?:
+            | Database["public"]["Enums"]["proposal_application_status"]
+            | null
+          proposal_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_applications_advertiser_id_profiles_profile_id_fk"
+            columns: ["advertiser_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "proposal_applications_proposal_id_influencer_proposals_proposal"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_proposals"
+            referencedColumns: ["proposal_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -209,14 +505,50 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      application_status: "approved" | "rejected" | "completed" | "pending"
+      application_status:
+        | "PENDING"
+        | "ACCEPTED"
+        | "REJECTED"
+        | "COMPLETED"
+        | "CANCELLED"
       campaign_status:
-        | "draft"
-        | "published"
-        | "closed"
-        | "cancelled"
-        | "completed"
-      role: "advertiser" | "influencer" | "admin"
+        | "DRAFT"
+        | "PUBLISHED"
+        | "CLOSED"
+        | "CANCELLED"
+        | "COMPLETED"
+      campaign_type: "INSTAGRAM" | "YOUTUBE" | "TIKTOK" | "BLOG"
+      content_type:
+        | "INSTAGRAM_POST"
+        | "INSTAGRAM_REEL"
+        | "INSTAGRAM_STORY"
+        | "YOUTUBE_SHORT"
+        | "YOUTUBE_VIDEO"
+        | "TIKTOK_VIDEO"
+        | "BLOG_POST"
+      gender: "MALE" | "FEMALE" | "OTHER"
+      influencer_category:
+        | "FASHION"
+        | "BEAUTY"
+        | "FOOD"
+        | "TRAVEL"
+        | "TECH"
+        | "GAME"
+        | "ENTERTAINMENT"
+        | "LIFESTYLE"
+        | "PARENTING"
+        | "PETS"
+        | "OTHER"
+      proposal_application_status:
+        | "PENDING"
+        | "ACCEPTED"
+        | "REJECTED"
+        | "COMPLETED"
+        | "CANCELLED"
+      proposal_status: "DRAFT" | "PUBLISHED" | "CLOSED" | "REJECTED"
+      role: "ADVERTISER" | "INFLUENCER" | "ADMIN"
+      sns_type: "INSTAGRAM" | "YOUTUBE" | "TIKTOK" | "BLOG"
+      target_market: "KR" | "JP" | "BOTH"
     }
     CompositeTypes: {
       [_ in never]: never

@@ -32,15 +32,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
   Settings.defaultLocale = "ko";
   Settings.defaultZone = "Asia/Tokyo";
   return (
-    <html lang="en" className="">
+    <html lang="en" className="h-full">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
-      <body>
-        <main className="">{children}</main>
+      <body className="min-h-full">
+        <main className="min-h-full">{children}</main>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -48,15 +48,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default async function App() {
+export default function App() {
   const { pathname } = useLocation();
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
 
   return (
     <div
-      className={cn({
-        "px-20 py-28": !pathname.includes("/auth"),
+      className={cn("min-h-screen", {
+        "px-20 pt-28 pb-10": !pathname.includes("/auth"),
         "opacity-50 transition-opacity duration-300 animate-pulse": isLoading,
       })}
     >

@@ -3,18 +3,14 @@ import { redirect } from "react-router";
 import { getServerClient } from "~/server";
 
 export async function loader({ request }: Route.LoaderArgs) {
-  try {
-    const supabase = getServerClient(request)
-    const res = await supabase.auth.getSession()
-    console.log(res)
+  const { supabase, headers } = getServerClient(request)
+  const { data: { user } } = await supabase.auth.getUser();
 
-    if (!res?.data?.session) {
-      throw redirect("/auth/login")
-    } else {
-      throw redirect("/campaigns")
-    }
-  } catch (error) {
-    console.error(error)
-    throw redirect("/auth/login")
+  if (!user) {
+    return redirect("/auth/login");
   }
+
+  return redirect("/campaigns", {
+    headers
+  });
 }

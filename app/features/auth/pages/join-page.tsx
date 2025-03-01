@@ -11,18 +11,18 @@ import AuthFormContainer from "../components/auth-form-container";
 import type { Route } from "./+types/join-page";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
-  const supabase = getServerClient(request)
+  const { supabase, headers } = getServerClient(request)
   const { data: { session } } = await supabase.auth.getSession();
 
   if (session) {
-    return redirect("/");
+    return redirect("/", { headers });
   }
 
   return {};
 };
 
 export const action = async ({ request }: Route.ActionArgs) => {
-  const supabase = getServerClient(request)
+  const { supabase, headers } = getServerClient(request)
   const formData = await request.formData();
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
@@ -37,26 +37,6 @@ export const action = async ({ request }: Route.ActionArgs) => {
     errors.email = "올바른 이메일 형식이 아닙니다.";
   }
 
-  if (!password) {
-    errors.password = "비밀번호를 입력해주세요.";
-  } else if (password.length < 6) {
-    errors.password = "비밀번호는 최소 6자 이상이어야 합니다.";
-  }
-
-  if (!name) {
-    errors.name = "이름을 입력해주세요.";
-  }
-
-  if (!username) {
-    errors.username = "사용자 이름을 입력해주세요.";
-  } else if (username.length < 3) {
-    errors.username = "사용자 이름은 최소 3자 이상이어야 합니다.";
-  }
-
-  if (Object.keys(errors).length > 0) {
-    return data({ errors }, { status: 400 });
-  }
-
   try {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -69,14 +49,8 @@ export const action = async ({ request }: Route.ActionArgs) => {
       },
     });
 
-    if (authError) {
-      return data(
-        { errors: { form: "회원가입 중 오류가 발생했습니다. 다시 시도해주세요." } },
-        { status: 400 }
-      );
-    }
-
-    return redirect("/");
+    console.log(authData, authError);
+    return redirect("/", { headers });
   } catch (error) {
     return data(
       { errors: { form: "회원가입 중 오류가 발생했습니다. 다시 시도해주세요." } },

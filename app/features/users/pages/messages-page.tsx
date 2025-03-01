@@ -19,7 +19,7 @@ export const meta: Route.MetaFunction = () => {
 
 export default function MessagesPage({ loaderData }: Route.ComponentProps) {
   return (
-    <div className="flex h-[calc(100vh-14rem)] max-h-[calc(100vh-14rem)] w-full flex-col items-center justify-center gap-4">
+    <div className="flex w-full flex-col items-center justify-center gap-4">
       <MessageCircleIcon className="text-muted-foreground size-12 size-16" />
       <h1 className="text-muted-foreground text-2xl font-semibold">
         Click on a message in the sidebar to view it.

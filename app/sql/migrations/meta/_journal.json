@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1740573227821,
-      "tag": "0000_sloppy_morbius",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1740573402097,
-      "tag": "0001_red_captain_britain",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1740573408240,
-      "tag": "0002_living_talos",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1740574968703,
-      "tag": "0003_wet_wolfsbane",
+      "when": 1740757074104,
+      "tag": "0000_burly_power_man",
       "breakpoints": true
     }
   ]

@@ -1,5 +1,5 @@
 export const ROLES = [
-  { label: "Advertiser", value: "advertiser" },
-  { label: "Influencer", value: "influencer" },
-  { label: "Admin", value: "admin" },
+  { label: "광고주", value: "ADVERTISER" },
+  { label: "인플루언서", value: "INFLUENCER" },
+  { label: "관리자", value: "ADMIN" },
 ];

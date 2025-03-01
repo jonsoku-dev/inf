@@ -1,0 +1,1 @@
+ALTER TABLE "campaigns" RENAME COLUMN "status" TO "campaign_status";

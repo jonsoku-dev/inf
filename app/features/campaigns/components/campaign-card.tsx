@@ -55,13 +55,9 @@ export function CampaignCard({
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <CardTitle className="text-lg">
-                        {(isAdmin || isOwner) ? (
-                            <Link to={`/my/campaigns/${campaign_id}`}>
-                                {title}
-                            </Link>
-                        ) : (
-                            title
-                        )}
+                        <Link to={`/campaigns/${currentUserRole?.toLocaleLowerCase()}/${campaign_id}`}>
+                            {title}
+                        </Link>
                     </CardTitle>
                     <Badge>{CAMPAIGN_STATUS_LABELS[campaign_status as keyof typeof CAMPAIGN_STATUS_LABELS]}</Badge>
                 </div>

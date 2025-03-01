@@ -10,7 +10,7 @@ import { MessageUserItem } from "../components/message-user-item";
 
 export default function MessagesLayout() {
   return (
-    <SidebarProvider className="h-[calc(100vh-14rem)] max-h-[calc(100vh-14rem)] min-h-full overflow-hidden">
+    <SidebarProvider className="min-h-full overflow-hidden">
       <Sidebar className="pt-16" variant="floating">
         <SidebarContent>
           <SidebarGroup>

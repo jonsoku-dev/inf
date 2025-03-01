@@ -1,9 +1,9 @@
 export const CAMPAIGN_STATUS = {
-    DRAFT: "draft",
-    PUBLISHED: "published",
-    CLOSED: "closed",
-    CANCELLED: "cancelled",
-    COMPLETED: "completed",
+    DRAFT: "DRAFT",
+    PUBLISHED: "PUBLISHED",
+    CLOSED: "CLOSED",
+    CANCELLED: "CANCELLED",
+    COMPLETED: "COMPLETED",
 } as const;
 
 export const CAMPAIGN_STATUS_LABELS = {
@@ -12,4 +12,35 @@ export const CAMPAIGN_STATUS_LABELS = {
     [CAMPAIGN_STATUS.CLOSED]: "모집마감",
     [CAMPAIGN_STATUS.CANCELLED]: "취소",
     [CAMPAIGN_STATUS.COMPLETED]: "완료",
-} as const; 
+} as const;
+
+
+export const CAMPAIGN_TYPE = {
+    INSTAGRAM: 'INSTAGRAM',
+    YOUTUBE: 'YOUTUBE',
+    TIKTOK: 'TIKTOK',
+    BLOG: 'BLOG',
+} as const;
+
+export const CAMPAIGN_TYPE_LABELS = {
+    [CAMPAIGN_TYPE.INSTAGRAM]: "인스타그램",
+    [CAMPAIGN_TYPE.YOUTUBE]: "유튜브",
+    [CAMPAIGN_TYPE.TIKTOK]: "틱톡",
+    [CAMPAIGN_TYPE.BLOG]: "블로그",
+} as const;
+
+export const APPLICATION_STATUS = {
+    PENDING: "PENDING",
+    ACCEPTED: "ACCEPTED",
+    REJECTED: "REJECTED",
+    COMPLETED: "COMPLETED",
+    CANCELLED: "CANCELLED",
+} as const;
+
+export const APPLICATION_STATUS_LABELS = {
+    [APPLICATION_STATUS.PENDING]: "검토중",
+    [APPLICATION_STATUS.ACCEPTED]: "승인됨",
+    [APPLICATION_STATUS.REJECTED]: "거절됨",
+    [APPLICATION_STATUS.COMPLETED]: "완료",
+    [APPLICATION_STATUS.CANCELLED]: "취소",
+} as const;
