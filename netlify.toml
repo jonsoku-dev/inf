@@ -1,0 +1,18 @@
+[build]
+command = "react-router build"
+publish = "build/client"
+
+[dev]
+command = "react-router dev"
+port = 5173
+targetPort = 5173
+
+[functions]
+node_bundler = "esbuild"
+external_node_modules = ["@remix-run/node", "@react-router/node"]
+directory = "netlify/functions"
+
+[[redirects]]
+from = "/*"
+to = "/.netlify/functions/react-router-server"
+status = 200
