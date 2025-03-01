@@ -13,7 +13,6 @@
     "db:typegen": "supabase gen types typescript --project-id gmmdwnzjrnkontieoige > database-generated.types.ts"
   },
   "dependencies": {
-    "@netlify/vite-plugin-react-router": "^1.0.0",
     "@radix-ui/react-avatar": "^1.1.2",
     "@radix-ui/react-checkbox": "^1.1.4",
     "@radix-ui/react-dialog": "^1.1.6",
@@ -50,6 +49,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@netlify/vite-plugin-react-router": "^0.0.0",
     "@eslint/compat": "^1.2.6",
     "@eslint/eslintrc": "^3",
     "@react-router/dev": "^7.0.1",
