@@ -34,7 +34,7 @@
     "drizzle-orm": "^0.39.3",
     "input-otp": "^1.4.2",
     "isbot": "^5.1.17",
-    "lucide-react": "^0.474.0",
+    "lucide-react": "0.476.0",
     "luxon": "^3.5.0",
     "pg": "^8.13.1",
     "postgres": "^3.4.5",
