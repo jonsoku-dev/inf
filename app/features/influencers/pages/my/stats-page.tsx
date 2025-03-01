@@ -7,10 +7,23 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
-    Tooltip,
+    Tooltip as RechartsTooltip,
     ResponsiveContainer,
 } from "recharts";
 import type { Route } from "./+types/stats-page";
+import type { Database } from "database-generated.types";
+import { Button } from "~/common/components/ui/button";
+import { Link } from "react-router";
+
+type PlatformType = Database["public"]["Enums"]["sns_type"];
+type StatsData = {
+    date: string;
+    followers: number;
+    engagement: number | null;
+    likes: number | null;
+    comments: number | null;
+    views: number | null;
+};
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
@@ -33,10 +46,11 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 
     // 플랫폼별로 데이터 그룹화
     const statsByPlatform = (stats || []).reduce((acc, stat) => {
-        if (!acc[stat.platform]) {
-            acc[stat.platform] = [];
+        const platform = stat.platform as PlatformType;
+        if (!acc[platform]) {
+            acc[platform] = [];
         }
-        acc[stat.platform].push({
+        acc[platform].push({
             date: new Date(stat.recorded_at).toLocaleDateString(),
             followers: stat.followers_count,
             engagement: stat.engagement_rate,
@@ -45,7 +59,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
             views: stat.avg_views,
         });
         return acc;
-    }, {});
+    }, {} as Record<PlatformType, StatsData[]>);
 
     return { statsByPlatform };
 };
@@ -53,13 +67,24 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 export default function StatsPage({ loaderData }: Route.ComponentProps) {
     const { statsByPlatform } = loaderData;
 
+    if (Object.keys(statsByPlatform).length === 0) {
+        return (
+            <div className="text-center py-10">
+                <p className="text-muted-foreground">통계 데이터가 없습니다. SNS 계정을 인증하고 통계를 수집해보세요.</p>
+                <Button className="mt-4" asChild>
+                    <Link to="/influencer/my/verifications">계정 인증하기</Link>
+                </Button>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             {Object.entries(statsByPlatform).map(([platform, data]) => (
                 <Card key={platform}>
                     <CardHeader>
                         <CardTitle>
-                            {SNS_TYPE_LABELS[platform]} 통계
+                            {SNS_TYPE_LABELS[platform as keyof typeof SNS_TYPE_LABELS] || platform} 통계
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
@@ -69,7 +94,7 @@ export default function StatsPage({ loaderData }: Route.ComponentProps) {
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="date" />
                                     <YAxis />
-                                    <Tooltip />
+                                    <RechartsTooltip />
                                     <Line
                                         type="monotone"
                                         dataKey="followers"
@@ -117,4 +142,4 @@ export default function StatsPage({ loaderData }: Route.ComponentProps) {
             ))}
         </div>
     );
-} 
+}

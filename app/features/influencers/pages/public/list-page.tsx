@@ -4,6 +4,7 @@ import { InfluencerCard } from "../../components/influencer-card";
 import { INFLUENCER_CATEGORY_LABELS } from "../../constants";
 import { Badge } from "~/common/components/ui/badge";
 import { Link } from "react-router";
+import type { InfluencerProfile } from "../../types";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
@@ -16,8 +17,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
             *,
             profile:profiles (
                 name,
-                username,
-                avatar_url
+                username
             ),
             verifications:influencer_verifications (
                 platform,
@@ -42,8 +42,8 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
         query = query.contains("categories", [category]);
     }
 
-    const { data: influencers } = await query.order("created_at", { ascending: false });
-
+    const { data: influencers, error } = await query.order("created_at", { ascending: false });
+    console.log({ influencers, error });
     return {
         influencers: influencers || [],
         category,
@@ -53,6 +53,8 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 export default function ListPage({ loaderData }: Route.ComponentProps) {
     const { influencers, category } = loaderData;
 
+    console.log("렌더링 중인 인플루언서 목록:", influencers);
+
     return (
         <div className="container py-10 space-y-6">
             <div>
@@ -61,6 +63,15 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
             </div>
 
             <div className="flex flex-wrap gap-2">
+                <Badge
+                    key="all"
+                    variant={!category ? "default" : "outline"}
+                    className="cursor-pointer"
+                >
+                    <Link to="/influencer/public">
+                        전체
+                    </Link>
+                </Badge>
                 {Object.entries(INFLUENCER_CATEGORY_LABELS).map(([value, label]) => (
                     <Badge
                         key={value}
@@ -74,13 +85,21 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {influencers.map((influencer) => (
-                    <Link key={influencer.profile_id} to={`/influencer/public/${influencer.profile_id}`}>
-                        <InfluencerCard influencer={influencer} />
-                    </Link>
-                ))}
-            </div>
+            {influencers.length === 0 ? (
+                <div className="text-center py-10">
+                    <p className="text-muted-foreground">등록된 인플루언서가 없습니다.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {influencers.map((influencer) => (
+                        <div key={influencer.profile_id}>
+                            <Link to={`/influencer/public/${influencer.profile_id}`}>
+                                <InfluencerCard influencer={influencer as unknown as InfluencerProfile} />
+                            </Link>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 } 

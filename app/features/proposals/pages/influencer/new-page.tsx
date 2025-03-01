@@ -19,7 +19,8 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
         .single();
 
     if (!profile) {
-        throw new Error("인플루언서 프로필이 필요합니다");
+        // 프로필이 없으면 프로필 생성 페이지로 리다이렉트
+        return redirect("/influencer/my");
     }
 
     return {};
@@ -31,22 +32,34 @@ export const action = async ({ request }: Route.ActionArgs) => {
     const formData = await request.formData();
 
     if (!user) {
-        throw new Error("인증이 필요합니다");
+        return redirect("/login?redirect=/proposals/influencer/new");
+    }
+
+    // 인플루언서 프로필 다시 확인
+    const { data: profile } = await supabase
+        .from("influencer_profiles")
+        .select("*")
+        .eq("profile_id", user.id)
+        .single();
+
+    if (!profile) {
+        return redirect("/my/influencer-profile/create?redirect=/proposals/influencer/new");
     }
 
     const data = {
         influencer_id: user.id,
-        title: formData.get("title"),
-        description: formData.get("description"),
-        desired_budget: parseInt(formData.get("desired_budget")),
-        target_market: formData.get("target_market"),
-        content_type: formData.get("content_type"),
-        expected_deliverables: formData.getAll("expected_deliverables"),
-        available_period_start: formData.get("available_period_start"),
-        available_period_end: formData.get("available_period_end"),
-        categories: formData.getAll("categories"),
+        title: formData.get("title") as string,
+        description: formData.get("description") as string,
+        desired_budget: parseInt(formData.get("desired_budget") as string),
+        target_market: formData.get("target_market") as string,
+        content_type: formData.get("content_type") as string,
+        expected_deliverables: formData.getAll("expected_deliverables") as string[],
+        available_period_start: formData.get("available_period_start") as string,
+        available_period_end: formData.get("available_period_end") as string,
+        categories: formData.getAll("categories") as string[],
         is_negotiable: formData.get("is_negotiable") === "on",
-        preferred_industry: formData.get("preferred_industry"),
+        preferred_industry: formData.get("preferred_industry") as string,
+        keywords: [], // 필수 필드 추가
         status: "DRAFT",
     };
 
@@ -56,7 +69,10 @@ export const action = async ({ request }: Route.ActionArgs) => {
         .select()
         .single();
 
-    if (error) throw error;
+    if (error) {
+        console.error("제안 등록 오류:", error);
+        throw new Error("제안 등록 중 오류가 발생했습니다: " + error.message);
+    }
 
     return redirect(`/proposals/influencer/${proposal.proposal_id}`);
 };

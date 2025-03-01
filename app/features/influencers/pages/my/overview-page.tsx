@@ -2,8 +2,8 @@ import { getServerClient } from "~/server";
 import { InfluencerProfileView } from "../../components/influencer-profile-view";
 import { Button } from "~/common/components/ui/button";
 import { Link } from "react-router";
-import { PlusCircle } from "lucide-react";
 import type { Route } from "./+types/overview-page";
+import type { InfluencerProfile } from "../../types";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
@@ -19,8 +19,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
             *,
             profile:profiles (
                 name,
-                username,
-                avatar_url
+                username
             ),
             verifications:influencer_verifications (
                 platform,
@@ -48,20 +47,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 export default function OverviewPage({ loaderData }: Route.ComponentProps) {
     const { profile } = loaderData;
 
-    if (!profile) {
-        return (
-            <div className="flex flex-col items-center justify-center gap-4 py-12">
-                <p className="text-lg text-muted-foreground">인플루언서 프로필이 없습니다</p>
-                <Button asChild>
-                    <Link to="/influencer/my/edit">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        프로필 생성하기
-                    </Link>
-                </Button>
-            </div>
-        );
-    }
-
+    // 프로필이 없는 경우는 레이아웃에서 처리하므로 여기서는 처리하지 않음
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -74,7 +60,7 @@ export default function OverviewPage({ loaderData }: Route.ComponentProps) {
                 </Button>
             </div>
 
-            <InfluencerProfileView profile={profile} />
+            <InfluencerProfileView profile={profile as unknown as InfluencerProfile} />
         </div>
     );
 } 

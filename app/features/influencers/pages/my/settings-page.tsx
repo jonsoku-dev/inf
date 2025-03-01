@@ -36,10 +36,10 @@ export const action = async ({ request }: Route.ActionArgs) => {
     const { error } = await supabase
         .from("influencer_profiles")
         .update({
-            instagram_handle: formData.get("instagram_handle"),
-            youtube_handle: formData.get("youtube_handle"),
-            tiktok_handle: formData.get("tiktok_handle"),
-            blog_url: formData.get("blog_url"),
+            instagram_handle: formData.get("instagram_handle") as string | null,
+            youtube_handle: formData.get("youtube_handle") as string | null,
+            tiktok_handle: formData.get("tiktok_handle") as string | null,
+            blog_url: formData.get("blog_url") as string | null,
             is_public: formData.get("is_public") === "on",
         })
         .eq("profile_id", user.id);
@@ -52,6 +52,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
 export default function SettingsPage({ loaderData }: Route.ComponentProps) {
     const { profile } = loaderData;
 
+    // 프로필이 없는 경우는 레이아웃에서 처리하므로 여기서는 처리하지 않음
     return (
         <div className="space-y-6">
             <Form method="post" className="space-y-6">
@@ -66,7 +67,7 @@ export default function SettingsPage({ loaderData }: Route.ComponentProps) {
                                 id="instagram_handle"
                                 name="instagram_handle"
                                 placeholder="@username"
-                                defaultValue={profile?.instagram_handle}
+                                defaultValue={profile?.instagram_handle || ""}
                             />
                         </div>
 
@@ -76,7 +77,7 @@ export default function SettingsPage({ loaderData }: Route.ComponentProps) {
                                 id="youtube_handle"
                                 name="youtube_handle"
                                 placeholder="@channel"
-                                defaultValue={profile?.youtube_handle}
+                                defaultValue={profile?.youtube_handle || ""}
                             />
                         </div>
 
@@ -86,7 +87,7 @@ export default function SettingsPage({ loaderData }: Route.ComponentProps) {
                                 id="tiktok_handle"
                                 name="tiktok_handle"
                                 placeholder="@username"
-                                defaultValue={profile?.tiktok_handle}
+                                defaultValue={profile?.tiktok_handle || ""}
                             />
                         </div>
 
@@ -97,7 +98,7 @@ export default function SettingsPage({ loaderData }: Route.ComponentProps) {
                                 name="blog_url"
                                 type="url"
                                 placeholder="https://..."
-                                defaultValue={profile?.blog_url}
+                                defaultValue={profile?.blog_url || ""}
                             />
                         </div>
                     </CardContent>

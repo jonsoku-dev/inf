@@ -1,4 +1,5 @@
 import type { GENDER, SNS_TYPE, INFLUENCER_CATEGORY } from "./constants";
+import type { Database } from "database-generated.types";
 
 export interface InfluencerVerification {
     verification_id: string;
@@ -39,42 +40,44 @@ export const CATEGORIES = [
 
 export type Category = typeof CATEGORIES[number];
 
-export interface InfluencerProfile {
-    profile_id: string;
-    categories: Category[];
-    instagram_handle: string | null;
-    youtube_handle: string | null;
-    tiktok_handle: string | null;
-    blog_url: string | null;
-    followers_count: number;
-    gender: string | null;
+export type InfluencerProfile = {
     birth_year: number | null;
-    location: string | null;
+    blog_url: string | null;
+    categories: Database["public"]["Enums"]["influencer_category"][];
+    created_at: string;
+    followers_count: Database["public"]["Tables"]["influencer_profiles"]["Row"]["followers_count"];
+    gender: Database["public"]["Enums"]["gender"] | null;
+    instagram_handle: string | null;
     introduction: string | null;
-    portfolio_urls: string[];
     is_public: boolean;
+    location: string | null;
+    portfolio_urls: string[] | null;
+    profile_id: string;
+    tiktok_handle: string | null;
+    updated_at: string;
+    youtube_handle: string | null;
     profile: {
         name: string;
         username: string;
         avatar_url: string | null;
     };
     verifications: {
-        platform: string;
+        platform: Database["public"]["Enums"]["sns_type"];
         followers_count: number;
-        engagement_rate: number;
+        engagement_rate: number | null;
         is_valid: boolean;
         verified_at: string;
     }[];
     stats: {
-        platform: string;
+        platform: Database["public"]["Enums"]["sns_type"];
         followers_count: number;
-        engagement_rate: number;
-        avg_likes: number;
-        avg_comments: number;
-        avg_views: number;
+        engagement_rate: number | null;
+        avg_likes: number | null;
+        avg_comments: number | null;
+        avg_views: number | null;
         recorded_at: string;
     }[];
-}
+};
 
 export interface InfluencerSearchParams {
     category?: keyof typeof INFLUENCER_CATEGORY;
