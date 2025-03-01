@@ -10,7 +10,7 @@ import {
 } from "react-router";
 
 import { Settings } from "luxon";
-import { Navigation } from "~/common/components/navigation";
+import Navigation from "~/common/components/navigation";
 import type { Route } from "./+types/root";
 import "./app.css";
 import { cn } from "./lib/utils";
@@ -61,7 +61,7 @@ export default function App() {
       })}
     >
       {pathname.includes("auth") ? null : (
-        <Navigation isLoggedIn={false} hasNotifications={true} hasMessages={true} />
+        <Navigation />
       )}
       <Outlet />
     </div>

@@ -103,6 +103,7 @@ export default [
         ...prefix("/advertiser", [
             layout("features/proposals/layouts/advertiser-layout.tsx", [
                 index("features/proposals/pages/advertiser/list-page.tsx"),
+                route("/:proposalId", "features/proposals/pages/advertiser/detail-page.tsx"),
                 route("/:proposalId/apply", "features/proposals/pages/advertiser/apply-page.tsx"),
                 route("/applications", "features/proposals/pages/advertiser/applications-page.tsx"),
                 route("/applications/:applicationId", "features/proposals/pages/advertiser/application-detail-page.tsx"),

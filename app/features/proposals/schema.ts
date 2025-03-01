@@ -13,6 +13,7 @@ import {
     TARGET_MARKET,
     CONTENT_TYPE,
     PROPOSAL_APPLICATION_STATUS,
+    ADVERTISER_PROPOSAL_STATUS,
 } from "./constants";
 
 export const proposalStatusEnum = pgEnum("proposal_status", [
@@ -46,7 +47,16 @@ export const proposalApplicationStatusEnum = pgEnum("proposal_application_status
     PROPOSAL_APPLICATION_STATUS.CANCELLED,
 ]);
 
-export const proposals = pgTable("influencer_proposals", {
+export const advertiserProposalStatusEnum = pgEnum("advertiser_proposal_status", [
+    ADVERTISER_PROPOSAL_STATUS.DRAFT,
+    ADVERTISER_PROPOSAL_STATUS.SENT,
+    ADVERTISER_PROPOSAL_STATUS.ACCEPTED,
+    ADVERTISER_PROPOSAL_STATUS.REJECTED,
+    ADVERTISER_PROPOSAL_STATUS.COMPLETED,
+    ADVERTISER_PROPOSAL_STATUS.CANCELLED,
+]);
+
+export const influencerProposals = pgTable("influencer_proposals", {
     proposal_id: uuid("proposal_id").primaryKey().defaultRandom(),
     influencer_id: uuid("influencer_id")
         .notNull()
@@ -73,12 +83,52 @@ export const proposalApplications = pgTable("proposal_applications", {
     application_id: uuid("application_id").primaryKey().defaultRandom(),
     proposal_id: uuid("proposal_id")
         .notNull()
-        .references(() => proposals.proposal_id),
+        .references(() => influencerProposals.proposal_id),
     advertiser_id: uuid("advertiser_id")
         .notNull()
         .references(() => profiles.profile_id),
     message: text("message").notNull(),
     proposal_application_status: proposalApplicationStatusEnum("proposal_application_status").default(PROPOSAL_APPLICATION_STATUS.PENDING),
     applied_at: timestamp("applied_at").notNull().defaultNow(),
+    updated_at: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const advertiserProposals = pgTable("advertiser_proposals", {
+    proposal_id: uuid("proposal_id").primaryKey().defaultRandom(),
+    advertiser_id: uuid("advertiser_id")
+        .notNull()
+        .references(() => profiles.profile_id),
+    influencer_id: uuid("influencer_id")
+        .notNull()
+        .references(() => profiles.profile_id),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    budget: integer("budget").notNull(),
+    target_market: targetMarketEnum("target_market").notNull(),
+    content_type: contentTypeEnum("content_type").notNull(),
+    requirements: text("requirements").array().notNull(),
+    campaign_start_date: timestamp("campaign_start_date").notNull(),
+    campaign_end_date: timestamp("campaign_end_date").notNull(),
+    categories: text("categories").array().notNull(),
+    keywords: text("keywords").array(),
+    reference_urls: text("reference_urls").array(),
+    is_negotiable: boolean("is_negotiable").default(true),
+    proposal_status: advertiserProposalStatusEnum("proposal_status").default(ADVERTISER_PROPOSAL_STATUS.DRAFT),
+    message: text("message"),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+    updated_at: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const advertiserProposalResponses = pgTable("advertiser_proposal_responses", {
+    response_id: uuid("response_id").primaryKey().defaultRandom(),
+    proposal_id: uuid("proposal_id")
+        .notNull()
+        .references(() => advertiserProposals.proposal_id),
+    influencer_id: uuid("influencer_id")
+        .notNull()
+        .references(() => profiles.profile_id),
+    message: text("message").notNull(),
+    response_status: proposalApplicationStatusEnum("response_status").default(PROPOSAL_APPLICATION_STATUS.PENDING),
+    responded_at: timestamp("responded_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
 }); 

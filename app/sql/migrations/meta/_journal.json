@@ -8,6 +8,20 @@
       "when": 1740757074104,
       "tag": "0000_burly_power_man",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1740835276348,
+      "tag": "0001_abandoned_doctor_doom",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1740836182916,
+      "tag": "0002_sour_purifiers",
+      "breakpoints": true
     }
   ]
 }

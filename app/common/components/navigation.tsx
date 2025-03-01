@@ -39,6 +39,17 @@ const commonMenus = [
       },
     ],
   },
+  {
+    name: "인플루언서",
+    to: "/influencer/public",
+    items: [
+      {
+        name: "인플루언서 목록",
+        description: "등록된 인플루언서들을 확인하세요",
+        to: "/influencer/public",
+      },
+    ],
+  },
 ];
 
 const advertiserMenus = [
@@ -56,6 +67,16 @@ const advertiserMenus = [
         description: "새로운 캠페인을 등록하세요",
         to: "/campaigns/advertiser/new",
       },
+      {
+        name: "제안 목록",
+        description: "인플루언서 제안을 확인하세요",
+        to: "/proposals/advertiser",
+      },
+      {
+        name: "제안 신청 관리",
+        description: "인플루언서들의 제안 신청을 관리하세요",
+        to: "/proposals/advertiser/applications",
+      },
     ],
   },
 ];
@@ -66,28 +87,39 @@ const influencerMenus = [
     to: "/campaigns/influencer",
     items: [
       {
-        name: "내 지원 현황",
+        name: "캠페인 지원 현황",
         description: "지원한 캠페인을 확인하세요",
         to: "/campaigns/influencer",
+      },
+      {
+        name: "내 제안 관리",
+        description: "등록한 제안을 관리하세요",
+        to: "/proposals/influencer",
+      },
+      {
+        name: "새 제안 등록",
+        description: "새로운 제안을 등록하세요",
+        to: "/proposals/influencer/new",
+      },
+      {
+        name: "프로필 관리",
+        description: "인플루언서 프로필을 관리하세요",
+        to: "/influencer/my",
       },
     ],
   },
 ];
 
-interface NavigationProps {
-  isLoggedIn: boolean;
-}
-
 const userMenuItems = [
   {
     icon: UserIcon,
     label: "프로필",
-    to: "/my/profile",
+    to: "/influencer/my",
   },
   {
     icon: SettingsIcon,
     label: "설정",
-    to: "/my/settings",
+    to: "/influencer/my/settings",
   },
   {
     icon: LogOutIcon,
@@ -96,7 +128,7 @@ const userMenuItems = [
   },
 ];
 
-export function Navigation({ }: NavigationProps) {
+export default function Navigation() {
   const { user, isLoggedIn } = useSupabaseAuth();
   const isAdvertiser = user?.role === "ADVERTISER";
   const isInfluencer = user?.role === "INFLUENCER";

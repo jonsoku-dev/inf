@@ -1,7 +1,8 @@
 import { getServerClient } from "~/server";
 import { InfluencerProfileForm } from "../../components/influencer-profile-form";
+import type { Route } from "./+types/edit-page";
 
-export const loader = async ({ request }) => {
+export const loader = async ({ request }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -18,7 +19,7 @@ export const loader = async ({ request }) => {
     return { profile };
 };
 
-export const action = async ({ request }) => {
+export const action = async ({ request }: Route.ActionArgs) => {
     const { supabase } = getServerClient(request);
     const formData = await request.formData();
     const { data: { user } } = await supabase.auth.getUser();
@@ -46,7 +47,7 @@ export const action = async ({ request }) => {
     return { success: true };
 };
 
-export default function EditPage({ loaderData }) {
+export default function EditPage({ loaderData }: Route.ComponentProps) {
     const { profile } = loaderData;
 
     return (

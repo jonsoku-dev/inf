@@ -9,6 +9,144 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      advertiser_proposal_responses: {
+        Row: {
+          influencer_id: string
+          message: string
+          proposal_id: string
+          responded_at: string
+          response_id: string
+          response_status:
+            | Database["public"]["Enums"]["proposal_application_status"]
+            | null
+          updated_at: string
+        }
+        Insert: {
+          influencer_id: string
+          message: string
+          proposal_id: string
+          responded_at?: string
+          response_id?: string
+          response_status?:
+            | Database["public"]["Enums"]["proposal_application_status"]
+            | null
+          updated_at?: string
+        }
+        Update: {
+          influencer_id?: string
+          message?: string
+          proposal_id?: string
+          responded_at?: string
+          response_id?: string
+          response_status?:
+            | Database["public"]["Enums"]["proposal_application_status"]
+            | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advertiser_proposal_responses_influencer_id_profiles_profile_id"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "advertiser_proposal_responses_proposal_id_advertiser_proposals_"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "advertiser_proposals"
+            referencedColumns: ["proposal_id"]
+          },
+        ]
+      }
+      advertiser_proposals: {
+        Row: {
+          advertiser_id: string
+          budget: number
+          campaign_end_date: string
+          campaign_start_date: string
+          categories: string[]
+          content_type: Database["public"]["Enums"]["content_type"]
+          created_at: string
+          description: string
+          influencer_id: string
+          is_negotiable: boolean | null
+          keywords: string[] | null
+          message: string | null
+          proposal_id: string
+          proposal_status:
+            | Database["public"]["Enums"]["advertiser_proposal_status"]
+            | null
+          reference_urls: string[] | null
+          requirements: string[]
+          target_market: Database["public"]["Enums"]["target_market"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          advertiser_id: string
+          budget: number
+          campaign_end_date: string
+          campaign_start_date: string
+          categories: string[]
+          content_type: Database["public"]["Enums"]["content_type"]
+          created_at?: string
+          description: string
+          influencer_id: string
+          is_negotiable?: boolean | null
+          keywords?: string[] | null
+          message?: string | null
+          proposal_id?: string
+          proposal_status?:
+            | Database["public"]["Enums"]["advertiser_proposal_status"]
+            | null
+          reference_urls?: string[] | null
+          requirements: string[]
+          target_market: Database["public"]["Enums"]["target_market"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          advertiser_id?: string
+          budget?: number
+          campaign_end_date?: string
+          campaign_start_date?: string
+          categories?: string[]
+          content_type?: Database["public"]["Enums"]["content_type"]
+          created_at?: string
+          description?: string
+          influencer_id?: string
+          is_negotiable?: boolean | null
+          keywords?: string[] | null
+          message?: string | null
+          proposal_id?: string
+          proposal_status?:
+            | Database["public"]["Enums"]["advertiser_proposal_status"]
+            | null
+          reference_urls?: string[] | null
+          requirements?: string[]
+          target_market?: Database["public"]["Enums"]["target_market"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advertiser_proposals_advertiser_id_profiles_profile_id_fk"
+            columns: ["advertiser_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "advertiser_proposals_influencer_id_profiles_profile_id_fk"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           application_id: string
@@ -505,6 +643,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      advertiser_proposal_status:
+        | "DRAFT"
+        | "SENT"
+        | "ACCEPTED"
+        | "REJECTED"
+        | "COMPLETED"
+        | "CANCELLED"
       application_status:
         | "PENDING"
         | "ACCEPTED"

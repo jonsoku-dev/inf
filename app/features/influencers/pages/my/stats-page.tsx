@@ -10,8 +10,9 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from "recharts";
+import type { Route } from "./+types/stats-page";
 
-export const loader = async ({ request }) => {
+export const loader = async ({ request }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -49,7 +50,7 @@ export const loader = async ({ request }) => {
     return { statsByPlatform };
 };
 
-export default function StatsPage({ loaderData }) {
+export default function StatsPage({ loaderData }: Route.ComponentProps) {
     const { statsByPlatform } = loaderData;
 
     return (

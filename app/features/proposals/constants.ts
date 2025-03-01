@@ -94,4 +94,22 @@ export const PROPOSAL_APPLICATION_STATUS_LABELS = {
     [PROPOSAL_APPLICATION_STATUS.REJECTED]: "거절됨",
     [PROPOSAL_APPLICATION_STATUS.COMPLETED]: "완료",
     [PROPOSAL_APPLICATION_STATUS.CANCELLED]: "취소",
+} as const;
+
+export const ADVERTISER_PROPOSAL_STATUS = {
+    DRAFT: "DRAFT",        // 초안 (아직 보내지 않음)
+    SENT: "SENT",          // 인플루언서에게 전송됨
+    ACCEPTED: "ACCEPTED",  // 인플루언서가 수락함
+    REJECTED: "REJECTED",  // 인플루언서가 거절함
+    COMPLETED: "COMPLETED", // 협업 완료
+    CANCELLED: "CANCELLED", // 취소됨
+} as const;
+
+export const ADVERTISER_PROPOSAL_STATUS_LABELS = {
+    DRAFT: "초안",
+    SENT: "전송됨",
+    ACCEPTED: "수락됨",
+    REJECTED: "거절됨",
+    COMPLETED: "완료됨",
+    CANCELLED: "취소됨",
 } as const; 

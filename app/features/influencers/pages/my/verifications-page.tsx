@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/common/components/ui
 import { Badge } from "~/common/components/ui/badge";
 import { Button } from "~/common/components/ui/button";
 import { Form } from "react-router";
+import type { Route } from "./+types/verifications-page";
 
-export const loader = async ({ request }) => {
+export const loader = async ({ request }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -27,7 +28,7 @@ export const loader = async ({ request }) => {
     return { verifications, profile };
 };
 
-export const action = async ({ request }) => {
+export const action = async ({ request }: Route.ActionArgs) => {
     const { supabase } = getServerClient(request);
     const formData = await request.formData();
     const { data: { user } } = await supabase.auth.getUser();
@@ -53,7 +54,7 @@ export const action = async ({ request }) => {
     return { success: true };
 };
 
-export default function VerificationsPage({ loaderData }) {
+export default function VerificationsPage({ loaderData }: Route.ComponentProps) {
     const { verifications, profile } = loaderData;
 
     return (

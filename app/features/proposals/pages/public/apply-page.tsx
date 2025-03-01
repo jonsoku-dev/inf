@@ -1,16 +1,11 @@
-import { Link, data, redirect } from "react-router";
+import { Link, redirect } from "react-router";
 import { Button } from "~/common/components/ui/button";
-import { ProposalDetail } from "../../components/proposal-detail";
-import { getServerClient } from "~/server";
-import type { Route } from "./+types/proposal-apply-page";
 import { Form } from "react-router";
 import { Textarea } from "~/common/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "~/common/components/ui/card";
-import { z } from "zod";
-
-const applyFormSchema = z.object({
-    message: z.string().min(1, "메시지를 입력해주세요"),
-});
+import { getServerClient } from "~/server";
+import { ProposalDetail } from "../../components/proposal-detail";
+import type { Route } from "./+types/apply-page";
 
 export const loader = async ({ request, params }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
@@ -20,7 +15,7 @@ export const loader = async ({ request, params }: Route.LoaderArgs) => {
         throw new Error("인증이 필요합니다");
     }
 
-    // 광고주 권한 확인
+    // 현재 사용자가 광고주인지 확인
     const { data: profile } = await supabase
         .from("profiles")
         .select("role")
@@ -37,11 +32,12 @@ export const loader = async ({ request, params }: Route.LoaderArgs) => {
             *,
             influencer:profiles!influencer_id (
                 name,
-                username
+                username,
+                avatar_url
             )
         `)
         .eq("proposal_id", params.proposalId)
-        .eq("proposal_status", "PUBLISHED")
+        .eq("status", "PUBLISHED")
         .single();
 
     if (!proposal) {
@@ -57,79 +53,46 @@ export const loader = async ({ request, params }: Route.LoaderArgs) => {
         .single();
 
     if (existingApplication) {
-        throw new Error("이미 신청한 제안입니다");
+        throw redirect(`/proposals/public/${params.proposalId}`);
     }
 
-    return {
-        proposal,
-    };
+    return { proposal };
 };
 
 export const action = async ({ request, params }: Route.ActionArgs) => {
     const { supabase } = getServerClient(request);
     const { data: { user } } = await supabase.auth.getUser();
+    const formData = await request.formData();
 
     if (!user) {
         throw new Error("인증이 필요합니다");
     }
 
-    try {
-        const formData = await request.formData();
-        const rawData = {
+    const { error } = await supabase
+        .from("proposal_applications")
+        .insert({
+            proposal_id: params.proposalId,
+            advertiser_id: user.id,
             message: formData.get("message"),
-        };
+        });
 
-        const validatedData = applyFormSchema.parse(rawData);
+    if (error) throw error;
 
-        const { error: supabaseError } = await supabase
-            .from("proposal_applications")
-            .insert({
-                proposal_id: params.proposalId,
-                advertiser_id: user.id,
-                message: validatedData.message,
-                proposal_application_status: "PENDING",
-            });
-
-        if (supabaseError) throw supabaseError;
-
-        return redirect("/my/proposal-applications");
-    } catch (error) {
-        if (error instanceof Error) {
-            return data({ errors: { form: error.message } }, { status: 400 });
-        }
-        if (error instanceof z.ZodError) {
-            const fieldErrors = error.errors.reduce((acc: Record<string, string>, curr) => {
-                if (curr.path[0]) {
-                    acc[curr.path[0].toString()] = curr.message;
-                }
-                return acc;
-            }, {});
-            return data({ errors: fieldErrors }, { status: 400 });
-        }
-        return data({ errors: { form: "알 수 없는 오류가 발생했습니다" } }, { status: 500 });
-    }
+    return redirect(`/proposals/public/${params.proposalId}`);
 };
 
-export const meta: Route.MetaFunction = () => {
-    return [
-        { title: "제안 신청 | Inf" },
-        { name: "description", content: "인플루언서의 제안에 신청하세요" },
-    ];
-};
-
-export default function ProposalApplyPage({ loaderData, actionData }: Route.ComponentProps) {
+export default function ApplyPage({ loaderData }: Route.ComponentProps) {
     const { proposal } = loaderData;
-    const errors = actionData?.errors;
 
     return (
         <div className="container py-10 space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">제안 신청</h1>
-                    <p className="text-muted-foreground text-sm">인플루언서의 제안에 신청하세요</p>
+                    <p className="text-muted-foreground text-sm">제안에 신청하세요</p>
                 </div>
                 <Button variant="outline" asChild>
-                    <Link to={`/proposals/${proposal.proposal_id}`}>돌아가기</Link>
+                    <Link to={`/proposals/public/${proposal.proposal_id}`}>취소</Link>
                 </Button>
             </div>
 
@@ -141,19 +104,14 @@ export default function ProposalApplyPage({ loaderData, actionData }: Route.Comp
                 </CardHeader>
                 <CardContent>
                     <Form method="post" className="space-y-4">
-                        <div>
+                        <div className="space-y-2">
                             <Textarea
                                 name="message"
-                                placeholder="인플루언서에게 전달할 메시지를 입력하세요"
-                                className="min-h-[120px]"
+                                placeholder="인플루언서에게 전달할 메시지를 작성하세요"
+                                rows={5}
+                                required
                             />
-                            {errors?.message && (
-                                <p className="text-destructive text-sm mt-1">{errors.message}</p>
-                            )}
                         </div>
-                        {errors?.form && (
-                            <p className="text-destructive text-sm">{errors.form}</p>
-                        )}
                         <div className="flex justify-end">
                             <Button type="submit">신청하기</Button>
                         </div>

@@ -3,8 +3,9 @@ import { InfluencerProfileView } from "../../components/influencer-profile-view"
 import { Button } from "~/common/components/ui/button";
 import { Link } from "react-router";
 import { PlusCircle } from "lucide-react";
+import type { Route } from "./+types/overview-page";
 
-export const loader = async ({ request }) => {
+export const loader = async ({ request }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -44,7 +45,7 @@ export const loader = async ({ request }) => {
     return { profile };
 };
 
-export default function OverviewPage({ loaderData }) {
+export default function OverviewPage({ loaderData }: Route.ComponentProps) {
     const { profile } = loaderData;
 
     if (!profile) {
