@@ -1,18 +1,24 @@
 import { Link } from "react-router";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "~/common/components/ui/card";
 import { Badge } from "~/common/components/ui/badge";
 import { Button } from "~/common/components/ui/button";
-import type { Campaign } from "../types";
-import { CAMPAIGN_STATUS, CAMPAIGN_STATUS_LABELS } from "../constants";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "~/common/components/ui/card";
+import { formatCurrency } from "~/lib/utils";
 
-interface PublicCampaignCardProps extends Omit<Campaign, 'advertiser'> {
-    advertiser?: {
+interface PublicCampaignCardProps {
+    campaign_id: string;
+    title: string;
+    description: string;
+    budget: number;
+    campaign_type: string;
+    is_negotiable: boolean;
+    is_urgent: boolean;
+    formatted_start_date?: string;
+    formatted_end_date?: string;
+    advertiser: {
         name: string;
         username: string;
-        role: string;
     };
-    currentUserRole?: string | null;
-    currentUserId?: string | null;
+    isOwner?: boolean;
 }
 
 export function PublicCampaignCard({
@@ -20,91 +26,68 @@ export function PublicCampaignCard({
     title,
     description,
     budget,
-    campaign_status,
-    target_market,
-    requirements,
-    period_start,
-    period_end,
-    advertiser_id,
+    campaign_type,
+    is_negotiable,
+    is_urgent,
+    formatted_start_date,
+    formatted_end_date,
     advertiser,
-    currentUserRole,
-    currentUserId,
+    isOwner
 }: PublicCampaignCardProps) {
-    const isOwner = currentUserId === advertiser_id;
-    const isAdmin = currentUserRole === "admin";
-    const isAdvertiser = currentUserRole === "advertiser";
-    const isInfluencer = currentUserRole === "influencer";
-    const isClosed = campaign_status === CAMPAIGN_STATUS.CLOSED as keyof typeof CAMPAIGN_STATUS;
-    const isPublished = campaign_status === CAMPAIGN_STATUS.PUBLISHED as keyof typeof CAMPAIGN_STATUS;
+    const campaignTypeLabel = {
+        INSTAGRAM: "인스타그램",
+        YOUTUBE: "유튜브",
+        TIKTOK: "틱톡",
+        BLOG: "블로그"
+    }[campaign_type] || campaign_type;
 
-    const cardContent = (
-        <>
-            <CardHeader>
-                <div className="flex items-start justify-between">
-                    <div>
-                        <CardTitle className="text-lg">
-                            {title}
-                        </CardTitle>
-                        {advertiser && (
-                            <p className="text-sm text-muted-foreground">
-                                by {advertiser.name}
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex gap-2">
-                        <Badge>{CAMPAIGN_STATUS_LABELS[campaign_status as keyof typeof CAMPAIGN_STATUS_LABELS]}</Badge>
-                        <Badge variant="outline">
-                            {target_market === "KR" ? "한국" : target_market === "JP" ? "일본" : "한국/일본"}
-                        </Badge>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <p className="text-muted-foreground text-sm line-clamp-2">{description}</p>
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground text-sm">예산</span>
-                        <span className="font-medium">{budget.toLocaleString()}원</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground text-sm">기간</span>
-                        <span className="text-sm">
-                            {period_start} ~ {period_end}
-                        </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground text-sm">지원 요건</span>
-                        <span className="text-sm line-clamp-1 text-right max-w-[200px]">
-                            {requirements}
-                        </span>
-                    </div>
-                </div>
-            </CardContent>
-        </>
-    );
+    // 설명 텍스트 길이 제한
+    const truncatedDescription = description.length > 100
+        ? description.substring(0, 100) + "..."
+        : description;
 
     return (
-        <Card className={isClosed ? "opacity-40" : undefined}>
-            {cardContent}
-            <CardFooter className="flex justify-end gap-2">
-                {/* 인플루언서이고 캠페인이 진행중일 때만 지원하기 버튼 표시 */}
-                {isInfluencer && isPublished && (
-                    <Button asChild>
-                        <Link to={`/campaigns/${campaign_id}`}>지원하기</Link>
-                    </Button>
-                )}
-                {/* 관리자나 소유자는 관리 페이지로 이동 */}
-                {(isAdmin || isOwner) && (
-                    <Button variant="outline" asChild>
-                        <Link to={`/my/campaigns/${campaign_id}`}>관리</Link>
-                    </Button>
-                )}
-                {/* 그 외의 경우 (비로그인 포함) 상세보기만 표시 */}
-                {!isInfluencer && !isAdmin && !isOwner && (
-                    <Button variant="outline" asChild>
-                        <Link to={`/campaigns/${campaign_id}`}>상세보기</Link>
-                    </Button>
-                )}
+        <Card className="h-full flex flex-col">
+            <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                    <CardTitle className="text-lg line-clamp-2">{title}</CardTitle>
+                    {is_urgent && (
+                        <Badge variant="destructive" className="ml-2 shrink-0">긴급</Badge>
+                    )}
+                </div>
+                <div className="flex items-center text-sm text-muted-foreground">
+                    <span>{advertiser.name}</span>
+                    <span className="mx-1">•</span>
+                    <Badge variant="outline" className="font-normal">{campaignTypeLabel}</Badge>
+                </div>
+            </CardHeader>
+            <CardContent className="flex-grow">
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-3">{truncatedDescription}</p>
+                <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">예산</span>
+                        <span className="font-medium">
+                            {formatCurrency(budget)}
+                            {is_negotiable && <span className="text-xs ml-1">(협의 가능)</span>}
+                        </span>
+                    </div>
+                    {formatted_start_date && formatted_end_date && (
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">기간</span>
+                            <span className="font-medium">{formatted_start_date} ~ {formatted_end_date}</span>
+                        </div>
+                    )}
+                </div>
+            </CardContent>
+            <CardFooter className="pt-2">
+                <Button asChild className="w-full">
+                    <Link to={isOwner
+                        ? `/campaigns/advertiser/${campaign_id}`
+                        : `/campaigns/${campaign_id}`
+                    }>
+                        {isOwner ? '관리하기' : '자세히 보기'}
+                    </Link>
+                </Button>
             </CardFooter>
         </Card>
     );

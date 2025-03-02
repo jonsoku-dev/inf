@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Form, redirect, useNavigate } from "react-router";
+import { DateTime } from "luxon";
 import { getServerClient } from "~/server";
 import { CampaignForm } from "../../components/campaign-form";
 import type { Route } from "./+types/edit-page";
@@ -52,8 +53,15 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
     const campaign_type = formData.get("campaign_type") as "INSTAGRAM" | "YOUTUBE" | "TIKTOK" | "BLOG";
     const target_market = formData.get("target_market") as string;
     const requirements = formData.get("requirements")?.toString().split("\n").filter(Boolean);
+
+    // 날짜 형식 표준화
     const start_date = formData.get("start_date") as string;
     const end_date = formData.get("end_date") as string;
+
+    // ISO 형식으로 변환 (시간대 정보 포함)
+    const formattedStartDate = start_date ? DateTime.fromISO(start_date).toISO() : undefined;
+    const formattedEndDate = end_date ? DateTime.fromISO(end_date).toISO() : undefined;
+
     const is_negotiable = formData.get("is_negotiable") === "on";
     const is_urgent = formData.get("is_urgent") === "on";
     const min_followers = formData.get("min_followers") ? Number(formData.get("min_followers")) : null;
@@ -64,27 +72,28 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
         [];
 
     try {
+        // 타입 캐스팅을 통해 해결
+        const campaignData = {
+            title,
+            description,
+            budget,
+            campaign_type,
+            target_market,
+            requirements,
+            start_date: formattedStartDate,
+            end_date: formattedEndDate,
+            is_negotiable,
+            is_urgent,
+            min_followers,
+            preferred_gender,
+            location_requirements,
+            keywords,
+        };
+
         const { error } = await supabase
             .from("campaigns")
-            .update({
-                title,
-                description,
-                budget,
-                campaign_type,
-                target_market,
-                requirements,
-                start_date,
-                end_date,
-                is_negotiable,
-                is_urgent,
-                min_followers,
-                preferred_gender,
-                location_requirements,
-                keywords,
-                updated_at: new Date().toISOString()
-            })
-            .eq("campaign_id", params.campaignId)
-            .eq("advertiser_id", user.id);
+            .update(campaignData as any)
+            .eq("campaign_id", params.campaignId);
 
         if (error) {
             console.error("캠페인 수정 오류:", error);
@@ -94,7 +103,7 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
             };
         }
 
-        return redirect(`/campaigns/advertiser`);
+        return redirect(`/campaigns/advertiser/${params.campaignId}`);
     } catch (error) {
         console.error("캠페인 수정 예외:", error);
         return {
@@ -132,12 +141,24 @@ export default function EditPage({ loaderData, actionData }: Route.ComponentProp
         navigate(`/campaigns/advertiser/${campaign.campaign_id}`);
     };
 
+    // 타입 안전하게 데이터 포맷팅
     const formattedCampaign = {
         ...campaign,
-        categories: Array.isArray(campaign.categories) ? campaign.categories : ["OTHER"],
-        start_date: campaign.start_date || campaign.period_start,
-        end_date: campaign.end_date || campaign.period_end,
-        keywords: Array.isArray(campaign.keywords) ? campaign.keywords : []
+        // categories가 배열이 아니면 기본값 설정
+        categories: Array.isArray(campaign.categories)
+            ? campaign.categories.map(c => String(c))
+            : ["OTHER"],
+        // 날짜 처리 - Luxon을 사용하여 ISO 날짜 문자열을 YYYY-MM-DD 형식으로 변환
+        start_date: campaign.start_date
+            ? DateTime.fromISO(campaign.start_date).toISODate()
+            : "",
+        end_date: campaign.end_date
+            ? DateTime.fromISO(campaign.end_date).toISODate()
+            : "",
+        // keywords가 배열이 아니면 기본값 설정
+        keywords: Array.isArray(campaign.keywords)
+            ? campaign.keywords.map(k => String(k))
+            : []
     };
 
     return (
@@ -155,7 +176,10 @@ export default function EditPage({ loaderData, actionData }: Route.ComponentProp
 
             <div className="rounded-lg border bg-card p-4 shadow-sm md:p-6">
                 <Form method="post" onSubmit={handleSubmit} className="space-y-4">
-                    <CampaignForm defaultValues={formattedCampaign} isSubmitting={isSubmitting} />
+                    <CampaignForm
+                        defaultValues={formattedCampaign as any}
+                        isSubmitting={isSubmitting}
+                    />
                 </Form>
             </div>
 

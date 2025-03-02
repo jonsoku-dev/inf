@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DateTime } from "luxon";
 import InputPair from "~/common/components/input-pair";
 import SelectPair from "~/common/components/select-pair";
 import { Button } from "~/common/components/ui/button";
@@ -57,8 +58,35 @@ export function CampaignForm({ defaultValues, isSubmitting }: CampaignFormProps)
         { label: "무관", value: "ANY" },
     ];
 
-    // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
-    const today = new Date().toISOString().split('T')[0];
+    // Luxon을 사용하여 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
+    const today = DateTime.now().toISODate();
+
+    // 날짜 형식 변환 함수
+    const formatDateString = (dateString: string | undefined | null): string => {
+        if (!dateString) return "";
+
+        // ISO 형식인지 확인
+        if (dateString.includes('T')) {
+            return DateTime.fromISO(dateString).toISODate() || "";
+        }
+
+        // 이미 YYYY-MM-DD 형식인지 확인
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+            return dateString;
+        }
+
+        // 다른 형식의 날짜 문자열 처리 시도
+        try {
+            return DateTime.fromFormat(dateString, "yyyy-MM-dd").toISODate() || "";
+        } catch (e) {
+            console.warn("날짜 형식 변환 실패:", dateString);
+            return "";
+        }
+    };
+
+    // 시작일과 종료일 기본값 설정
+    const startDateValue = formatDateString(defaultValues?.start_date) || today;
+    const endDateValue = formatDateString(defaultValues?.end_date) || "";
 
     return (
         <div className="space-y-6">
@@ -136,7 +164,7 @@ export function CampaignForm({ defaultValues, isSubmitting }: CampaignFormProps)
                         type="date"
                         label="시작일"
                         description="캠페인 시작 날짜"
-                        defaultValue={defaultValues?.start_date || today}
+                        defaultValue={startDateValue}
                         min={today}
                         required
                     />
@@ -147,8 +175,8 @@ export function CampaignForm({ defaultValues, isSubmitting }: CampaignFormProps)
                         type="date"
                         label="종료일"
                         description="캠페인 종료 날짜"
-                        defaultValue={defaultValues?.end_date || ""}
-                        min={today}
+                        defaultValue={endDateValue}
+                        min={startDateValue || today}
                         required
                     />
                 </div>

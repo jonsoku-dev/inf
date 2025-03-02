@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Form, redirect, useNavigate } from "react-router";
+import { DateTime } from "luxon";
 import { getServerClient } from "~/server";
 import { CampaignForm } from "../../components/campaign-form";
 import type { Route } from "./+types/new-page";
@@ -40,8 +41,15 @@ export const action = async ({ request }: Route.ActionArgs) => {
     const campaign_type = formData.get("campaign_type") as "INSTAGRAM" | "YOUTUBE" | "TIKTOK" | "BLOG";
     const target_market = formData.get("target_market") as string;
     const requirements = formData.get("requirements")?.toString().split("\n").filter(Boolean);
+
+    // 날짜 형식 표준화
     const start_date = formData.get("start_date") as string;
     const end_date = formData.get("end_date") as string;
+
+    // ISO 형식으로 변환 (시간대 정보 포함)
+    const formattedStartDate = start_date ? DateTime.fromISO(start_date).toISO() : undefined;
+    const formattedEndDate = end_date ? DateTime.fromISO(end_date).toISO() : undefined;
+
     const is_negotiable = formData.get("is_negotiable") === "on";
     const is_urgent = formData.get("is_urgent") === "on";
     const min_followers = formData.get("min_followers") ? Number(formData.get("min_followers")) : null;
@@ -55,27 +63,30 @@ export const action = async ({ request }: Route.ActionArgs) => {
     const categories = ["OTHER"];
 
     try {
+        // 타입 캐스팅을 통해 해결
+        const campaignData = {
+            title,
+            description,
+            budget,
+            campaign_type,
+            target_market,
+            requirements,
+            start_date: formattedStartDate,
+            end_date: formattedEndDate,
+            is_negotiable,
+            is_urgent,
+            min_followers,
+            preferred_gender,
+            location_requirements,
+            advertiser_id: user.id,
+            campaign_status: "DRAFT",
+            keywords,
+            categories
+        };
+
         const { data, error } = await supabase
             .from("campaigns")
-            .insert({
-                title,
-                description,
-                budget,
-                campaign_type,
-                target_market,
-                requirements,
-                start_date,
-                end_date,
-                is_negotiable,
-                is_urgent,
-                min_followers,
-                preferred_gender,
-                location_requirements,
-                advertiser_id: user.id,
-                campaign_status: "DRAFT",
-                keywords,
-                categories
-            })
+            .insert(campaignData as any)
             .select()
             .single();
 

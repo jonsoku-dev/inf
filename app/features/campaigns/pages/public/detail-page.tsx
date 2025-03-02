@@ -3,6 +3,7 @@ import { Button } from "~/common/components/ui/button";
 import { Card, CardContent } from "~/common/components/ui/card";
 import { getServerClient } from "~/server";
 import { CampaignDetailView } from "../../components/campaign-detail-view";
+import { DateTime } from "luxon";
 import type { Route } from "./+types/detail-page";
 
 export const loader = async ({ request, params }: Route.LoaderArgs) => {
@@ -12,7 +13,26 @@ export const loader = async ({ request, params }: Route.LoaderArgs) => {
     const { data: campaign } = await supabase
         .from("campaigns")
         .select(`
-            *,
+            campaign_id,
+            title,
+            description,
+            budget,
+            campaign_type,
+            target_market,
+            requirements,
+            start_date,
+            end_date,
+            campaign_status,
+            is_negotiable,
+            is_urgent,
+            min_followers,
+            created_at,
+            updated_at,
+            advertiser_id,
+            categories,
+            keywords,
+            preferred_gender,
+            location_requirements,
             advertiser:profiles!advertiser_id (
                 name,
                 username
@@ -27,20 +47,38 @@ export const loader = async ({ request, params }: Route.LoaderArgs) => {
         };
     }
 
+    // 날짜 형식 변환
+    const formattedCampaign = {
+        ...campaign,
+        start_date: campaign.start_date
+            ? DateTime.fromISO(campaign.start_date).toFormat('yyyy년 MM월 dd일')
+            : "",
+        end_date: campaign.end_date
+            ? DateTime.fromISO(campaign.end_date).toFormat('yyyy년 MM월 dd일')
+            : "",
+        // 타입 캐스팅을 위한 처리
+        campaign_status: campaign.campaign_status as any
+    };
+
     let currentUserRole = null;
+    let isOwner = false;
+
     if (user) {
         const { data: profile } = await supabase
             .from("profiles")
             .select("role")
             .eq("profile_id", user.id)
             .single();
+
         currentUserRole = profile?.role;
+        isOwner = user.id === campaign.advertiser_id;
     }
 
     return {
-        campaign,
+        campaign: formattedCampaign,
         currentUserRole,
         currentUserId: user?.id,
+        isOwner
     };
 };
 
@@ -52,7 +90,7 @@ export const meta: Route.MetaFunction = () => {
 };
 
 export default function DetailPage({ loaderData }: Route.ComponentProps) {
-    const { campaign, currentUserRole, currentUserId } = loaderData;
+    const { campaign, currentUserRole, isOwner } = loaderData;
 
     if (!campaign) {
         return (
@@ -85,14 +123,11 @@ export default function DetailPage({ loaderData }: Route.ComponentProps) {
             );
         }
 
-        if (currentUserRole === "ADVERTISER" && currentUserId === campaign.advertiser_id) {
+        if (currentUserRole === "ADVERTISER" && isOwner) {
             return (
                 <div className="flex gap-2">
                     <Button variant="outline" asChild>
-                        <Link to={`/campaigns/advertiser/${campaign.campaign_id}/edit`}>수정</Link>
-                    </Button>
-                    <Button variant="outline" asChild>
-                        <Link to={`/campaigns/advertiser/${campaign.campaign_id}/applications`}>지원자 관리</Link>
+                        <Link to={`/campaigns/advertiser/${campaign.campaign_id}`}>광고주 페이지로 이동</Link>
                     </Button>
                 </div>
             );
