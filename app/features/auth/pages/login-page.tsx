@@ -13,9 +13,9 @@ import type { Route } from "./+types/login-page";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const { supabase, headers } = getServerClient(request)
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (session) {
+  if (user) {
     return redirect("/", { headers });
   }
 

@@ -4,6 +4,7 @@ import { DateTime } from "luxon";
 import { getServerClient } from "~/server";
 import { CampaignForm } from "../../components/campaign-form";
 import type { Route } from "./+types/edit-page";
+import { sendSystemAlert } from "~/features/alerts/utils/alert-utils";
 
 export const loader = async ({ request, params }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
@@ -41,6 +42,7 @@ export const loader = async ({ request, params }: Route.LoaderArgs) => {
 export const action = async ({ request, params }: Route.ActionArgs) => {
     const { supabase } = getServerClient(request);
     const { data: { user } } = await supabase.auth.getUser();
+    const { campaignId } = params;
 
     if (!user) {
         return redirect("/auth/login");
@@ -90,10 +92,13 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
             keywords,
         };
 
-        const { error } = await supabase
+        // 캠페인 정보 업데이트
+        const { data: updatedCampaign, error } = await supabase
             .from("campaigns")
             .update(campaignData as any)
-            .eq("campaign_id", params.campaignId);
+            .eq("campaign_id", campaignId)
+            .select("campaign_status, title")
+            .single();
 
         if (error) {
             console.error("캠페인 수정 오류:", error);
@@ -103,7 +108,26 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
             };
         }
 
-        return redirect(`/campaigns/advertiser/${params.campaignId}`);
+        // 공개 상태인 캠페인이 수정된 경우 지원자들에게 알림
+        if (updatedCampaign.campaign_status === "PUBLISHED") {
+            const { data: applications } = await supabase
+                .from("applications")
+                .select("influencer_id")
+                .eq("campaign_id", campaignId);
+
+            if (applications && applications.length > 0) {
+                const recipientIds = applications.map(app => app.influencer_id);
+                await sendSystemAlert({
+                    request,
+                    title: "캠페인이 업데이트되었습니다",
+                    content: `"${updatedCampaign.title}" 캠페인 정보가 업데이트되었습니다.`,
+                    recipientIds,
+                    link: `/campaigns/${campaignId}`
+                });
+            }
+        }
+
+        return redirect(`/campaigns/advertiser/${campaignId}`);
     } catch (error) {
         console.error("캠페인 수정 예외:", error);
         return {

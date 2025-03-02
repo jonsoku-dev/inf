@@ -25,7 +25,11 @@ import {
   SettingsIcon,
   UserIcon,
 } from "lucide-react";
-import { useSupabaseAuth } from "~/hooks/use-supabase";
+import { useAuth } from "~/features/auth/hooks/use-auth";
+import { AlertIndicator } from "~/features/alerts/components/alert-indicator";
+import type { Database } from "database.types";
+
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 const commonMenus = [
   {
@@ -128,8 +132,9 @@ const userMenuItems = [
   },
 ];
 
-export default function Navigation() {
-  const { user, isLoggedIn } = useSupabaseAuth();
+export default function Navigation({ unreadAlertCount, profile }: { unreadAlertCount: number, profile: Profile | null }) {
+  const user = profile;
+  const isLoggedIn = !!user;
   const isAdvertiser = user?.role === "ADVERTISER";
   const isInfluencer = user?.role === "INFLUENCER";
 
@@ -191,6 +196,7 @@ export default function Navigation() {
 
       {isLoggedIn ? (
         <div className="flex items-center gap-2">
+          <AlertIndicator unreadCount={unreadAlertCount} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Avatar>

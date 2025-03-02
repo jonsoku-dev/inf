@@ -5,15 +5,18 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
   useLocation,
-  useNavigation,
+  useNavigation
 } from "react-router";
 
 import { Settings } from "luxon";
 import Navigation from "~/common/components/navigation";
+import { Toaster } from "~/common/components/ui/sonner";
+import { cn } from "~/lib/utils";
+import { getServerClient } from "~/server";
 import type { Route } from "./+types/root";
 import "./app.css";
-import { cn } from "./lib/utils";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -28,43 +31,73 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const { supabase, headers } = getServerClient(request);
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let unreadAlertCount = 0;
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("profile_id", user.id)
+      .single();
+
+    if (profile) {
+      const { count } = await supabase
+        .from("alerts")
+        .select("*", { count: "exact", head: true })
+        .eq("recipient_id", profile.profile_id)
+        .eq("alert_status", "UNREAD");
+
+      unreadAlertCount = count || 0;
+    }
+
+    return {
+      isAuthenticated: !!user,
+      unreadAlertCount,
+      profile: profile,
+    }
+  }
+
+  return {
+    isAuthenticated: false,
+    unreadAlertCount: 0,
+    profile: null,
+  }
+};
+
+export default function Root() {
+  const { isAuthenticated, unreadAlertCount, profile } = useLoaderData<typeof loader>();
+  const { pathname } = useLocation();
+  const navigation = useNavigation();
+  const isLoading = navigation.state === "loading";
+  // 기본 설정
   Settings.defaultLocale = "ko";
   Settings.defaultZone = "Asia/Tokyo";
+
   return (
-    <html lang="en" className="h-full">
+    <html lang="ko" className="h-full">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
-      <body className="min-h-full">
-        <main className="min-h-full">{children}</main>
+      <body className={cn({
+        "px-20 py-28": !pathname.includes("/auth"),
+        "opacity-50 transition-opacity duration-300 animate-pulse": isLoading,
+      })}>
+        {isAuthenticated && <Navigation unreadAlertCount={unreadAlertCount} profile={profile} />}
+        <main className="min-h-full">
+          <Outlet />
+          <Toaster />
+        </main>
         <ScrollRestoration />
         <Scripts />
       </body>
     </html>
-  );
-}
-
-export default function App() {
-  const { pathname } = useLocation();
-  const navigation = useNavigation();
-  const isLoading = navigation.state === "loading";
-
-  return (
-    <div
-      className={cn("min-h-screen", {
-        "px-20 pt-28 pb-10": !pathname.includes("/auth"),
-        "opacity-50 transition-opacity duration-300 animate-pulse": isLoading,
-      })}
-    >
-      {pathname.includes("auth") ? null : (
-        <Navigation />
-      )}
-      <Outlet />
-    </div>
   );
 }
 

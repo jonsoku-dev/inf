@@ -22,6 +22,13 @@
       "when": 1740836182916,
       "tag": "0002_sour_purifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1740919903124,
+      "tag": "0003_magical_turbo",
+      "breakpoints": true
     }
   ]
 }

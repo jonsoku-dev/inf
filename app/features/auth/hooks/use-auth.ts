@@ -1,20 +1,18 @@
-import type { Database } from "database.types";
 import { useEffect, useState } from "react";
-import { createClient } from "~/supa-client";
+import { useSupabase } from "~/common/hooks/use-supabase";
+import type { Database } from "database.types";
 
-interface UseSupabaseAuth {
+interface UseAuthReturn {
     user: Database['public']['Tables']['profiles']['Row'] | null;
     isLoading: boolean;
     isLoggedIn: boolean;
 }
 
-export function useSupabaseAuth(): UseSupabaseAuth {
+export function useAuth(): UseAuthReturn {
     const [user, setUser] = useState<Database['public']['Tables']['profiles']['Row'] | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [supabase] = useState(() => createClient({
-        supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
-        supabaseKey: import.meta.env.VITE_SUPABASE_KEY,
-    }))
+    const { supabase } = useSupabase();
+
     useEffect(() => {
         // 현재 세션 확인 (비동기 처리)
         async function checkSession() {
@@ -34,7 +32,7 @@ export function useSupabaseAuth(): UseSupabaseAuth {
         }
 
         checkSession();
-    }, []);
+    }, [supabase]);
 
     return { user, isLoading, isLoggedIn: !!user };
 } 

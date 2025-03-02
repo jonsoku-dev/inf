@@ -4,6 +4,7 @@ import { DateTime } from "luxon";
 import { getServerClient } from "~/server";
 import { CampaignForm } from "../../components/campaign-form";
 import type { Route } from "./+types/new-page";
+import { sendCampaignCreatedAlert } from "~/features/alerts/utils/alert-utils";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
@@ -84,7 +85,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
             categories
         };
 
-        const { data, error } = await supabase
+        const { data: campaign, error } = await supabase
             .from("campaigns")
             .insert(campaignData as any)
             .select()
@@ -96,6 +97,25 @@ export const action = async ({ request }: Route.ActionArgs) => {
                 ok: false,
                 error: "캠페인 등록에 실패했습니다: " + error.message
             };
+        }
+
+        // 캠페인이 DRAFT가 아닌 경우에만 알림 전송
+        if (campaignData.campaign_status !== "DRAFT") {
+            // 인플루언서 목록 가져오기
+            const { data: influencers } = await supabase
+                .from("profiles")
+                .select("profile_id")
+                .eq("role", "INFLUENCER");
+
+            if (influencers && influencers.length > 0) {
+                const recipientIds = influencers.map(inf => inf.profile_id);
+                await sendCampaignCreatedAlert({
+                    request,
+                    campaignId: campaign.campaign_id,
+                    campaignTitle: campaign.title,
+                    recipientIds
+                });
+            }
         }
 
         return redirect(`/campaigns/advertiser`);

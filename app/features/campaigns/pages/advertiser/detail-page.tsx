@@ -7,6 +7,7 @@ import { CampaignDetailView } from "../../components/campaign-detail-view";
 import { CampaignStatusView } from "../../components/campaign-status-view";
 import { CAMPAIGN_STATUS } from "../../constants";
 import type { Route } from "./+types/detail-page";
+import { sendCampaignCreatedAlert, sendSystemAlert } from "~/features/alerts/utils/alert-utils";
 
 export const loader = async ({ request, params }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
@@ -75,7 +76,7 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
     // 캠페인 소유자 확인
     const { data: campaign } = await supabase
         .from("campaigns")
-        .select("advertiser_id, campaign_status")
+        .select("advertiser_id, campaign_status, title")
         .eq("campaign_id", campaignId)
         .single();
 
@@ -86,32 +87,72 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
     let newStatus;
     switch (action) {
         case "publish":
-            newStatus = CAMPAIGN_STATUS.PUBLISHED;
+            newStatus = "PUBLISHED";
             break;
         case "close":
-            newStatus = CAMPAIGN_STATUS.CLOSED;
-            break;
-        case "cancel":
-            newStatus = CAMPAIGN_STATUS.CANCELLED;
+            newStatus = "CLOSED";
             break;
         case "complete":
-            newStatus = CAMPAIGN_STATUS.COMPLETED;
+            newStatus = "COMPLETED";
+            break;
+        case "cancel":
+            newStatus = "CANCELLED";
             break;
         default:
             return { error: "유효하지 않은 작업입니다." };
     }
 
-    // 상태 변경
     const { error } = await supabase
         .from("campaigns")
-        .update({ campaign_status: newStatus, updated_at: new Date().toISOString() })
+        .update({ campaign_status: newStatus as keyof typeof CAMPAIGN_STATUS })
         .eq("campaign_id", campaignId);
 
     if (error) {
         return { error: "상태 변경 중 오류가 발생했습니다." };
     }
 
-    return { success: true };
+    // 상태 변경에 따른 알림 처리
+    if (newStatus === "PUBLISHED") {
+        // 캠페인이 공개되면 모든 인플루언서에게 알림
+        const { data: influencers } = await supabase
+            .from("profiles")
+            .select("profile_id")
+            .eq("role", "INFLUENCER");
+
+        if (influencers && influencers.length > 0) {
+            const recipientIds = influencers.map(inf => inf.profile_id);
+            await sendCampaignCreatedAlert({
+                request,
+                campaignId,
+                campaignTitle: campaign.title,
+                recipientIds
+            });
+        }
+    } else if (newStatus === "CLOSED" || newStatus === "CANCELLED") {
+        // 캠페인이 마감되거나 취소되면 지원자들에게 알림
+        const { data: applications } = await supabase
+            .from("applications")
+            .select("influencer_id")
+            .eq("campaign_id", campaignId)
+            .in("application_status", ["PENDING", "ACCEPTED"]);
+
+        if (applications && applications.length > 0) {
+            const recipientIds = applications.map(app => app.influencer_id);
+            const title = newStatus === "CLOSED" ? "캠페인이 마감되었습니다" : "캠페인이 취소되었습니다";
+            const content = `"${campaign.title}" 캠페인이 ${newStatus === "CLOSED" ? "마감" : "취소"}되었습니다.`;
+
+            await sendSystemAlert({
+                request,
+                title,
+                content,
+                recipientIds,
+                link: `/campaigns/${campaignId}`,
+                isImportant: false
+            });
+        }
+    }
+
+    return redirect(`/campaigns/advertiser/${campaignId}`);
 };
 
 export const meta: Route.MetaFunction = () => {

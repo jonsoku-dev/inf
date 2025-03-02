@@ -24,6 +24,7 @@ import { getServerClient } from "~/server";
 import { DateTime } from "luxon";
 import { SearchIcon, FilterIcon, ArrowUpDown, UserIcon, CheckIcon, XIcon, MessageSquareIcon, ClockIcon } from "lucide-react";
 import type { Route } from "./+types/applications-page";
+import { sendApplicationAcceptedAlert, sendApplicationRejectedAlert } from "~/features/alerts/utils/alert-utils";
 
 // 페이지네이션 컴포넌트 직접 구현
 function PaginationControls({
@@ -121,27 +122,83 @@ export const loader = async ({ request, params }: Route.LoaderArgs) => {
     };
 };
 
-export const action = async ({ request }: Route.ActionArgs) => {
+export const action = async ({ request, params }: Route.ActionArgs) => {
     const { supabase } = getServerClient(request);
-    const formData = await request.formData();
-    const intent = formData.get("intent");
+    const { data: { user } } = await supabase.auth.getUser();
+    const { campaignId } = params;
 
-    if (intent === "update-status") {
-        const applicationId = formData.get("applicationId") as string;
-        const status = formData.get("status") as keyof typeof APPLICATION_STATUS;
-
-        const { error } = await supabase
-            .from("applications")
-            .update({ application_status: status })
-            .eq("application_id", applicationId);
-
-        if (error) {
-            return { ok: false, error: "상태 변경에 실패했습니다." };
-        }
-
-        return { ok: true };
+    if (!user) {
+        return redirect("/auth/login");
     }
 
+    const formData = await request.formData();
+    const intent = formData.get("intent") as string;
+    const applicationId = formData.get("applicationId") as string;
+
+    // 캠페인 소유자 확인
+    const { data: campaign } = await supabase
+        .from("campaigns")
+        .select("advertiser_id, title")
+        .eq("campaign_id", campaignId)
+        .single();
+
+    if (!campaign || campaign.advertiser_id !== user.id) {
+        return { error: "권한이 없습니다." };
+    }
+
+    // 지원서 정보 가져오기
+    const { data: application } = await supabase
+        .from("applications")
+        .select("influencer_id, application_status")
+        .eq("application_id", applicationId)
+        .eq("campaign_id", campaignId)
+        .single();
+
+    if (!application) {
+        return { error: "지원서를 찾을 수 없습니다." };
+    }
+
+    let newStatus;
+    switch (intent) {
+        case "accept":
+            newStatus = "ACCEPTED";
+            break;
+        case "reject":
+            newStatus = "REJECTED";
+            break;
+        default:
+            return { error: "유효하지 않은 작업입니다." };
+    }
+
+    const { error } = await supabase
+        .from("applications")
+        .update({ application_status: newStatus as keyof typeof APPLICATION_STATUS })
+        .eq("application_id", applicationId);
+
+    if (error) {
+        return { error: "상태 변경 중 오류가 발생했습니다." };
+    }
+
+    // 상태 변경에 따른 알림 처리
+    if (newStatus === "ACCEPTED") {
+        await sendApplicationAcceptedAlert({
+            request,
+            applicationId,
+            campaignId,
+            campaignTitle: campaign.title,
+            recipientId: application.influencer_id
+        });
+    } else if (newStatus === "REJECTED") {
+        await sendApplicationRejectedAlert({
+            request,
+            applicationId,
+            campaignId,
+            campaignTitle: campaign.title,
+            recipientId: application.influencer_id
+        });
+    }
+
+    return { success: true };
 };
 
 export const meta: Route.MetaFunction = () => {

@@ -147,6 +147,116 @@ export type Database = {
           },
         ]
       }
+      alert_settings: {
+        Row: {
+          application_alerts: boolean | null
+          campaign_alerts: boolean | null
+          created_at: string
+          email_notifications: boolean | null
+          line_notifications: boolean | null
+          profile_id: string
+          proposal_alerts: boolean | null
+          push_notifications: boolean | null
+          setting_id: string
+          system_alerts: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          application_alerts?: boolean | null
+          campaign_alerts?: boolean | null
+          created_at?: string
+          email_notifications?: boolean | null
+          line_notifications?: boolean | null
+          profile_id: string
+          proposal_alerts?: boolean | null
+          push_notifications?: boolean | null
+          setting_id?: string
+          system_alerts?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          application_alerts?: boolean | null
+          campaign_alerts?: boolean | null
+          created_at?: string
+          email_notifications?: boolean | null
+          line_notifications?: boolean | null
+          profile_id?: string
+          proposal_alerts?: boolean | null
+          push_notifications?: boolean | null
+          setting_id?: string
+          system_alerts?: boolean | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_settings_profile_id_profiles_profile_id_fk"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
+      alerts: {
+        Row: {
+          alert_id: string
+          alert_status: Database["public"]["Enums"]["alert_status"]
+          alert_type: Database["public"]["Enums"]["alert_type"]
+          content: string
+          created_at: string
+          is_important: boolean | null
+          link: string | null
+          metadata: string | null
+          read_at: string | null
+          recipient_id: string
+          sender_id: string | null
+          title: string
+        }
+        Insert: {
+          alert_id?: string
+          alert_status?: Database["public"]["Enums"]["alert_status"]
+          alert_type: Database["public"]["Enums"]["alert_type"]
+          content: string
+          created_at?: string
+          is_important?: boolean | null
+          link?: string | null
+          metadata?: string | null
+          read_at?: string | null
+          recipient_id: string
+          sender_id?: string | null
+          title: string
+        }
+        Update: {
+          alert_id?: string
+          alert_status?: Database["public"]["Enums"]["alert_status"]
+          alert_type?: Database["public"]["Enums"]["alert_type"]
+          content?: string
+          created_at?: string
+          is_important?: boolean | null
+          link?: string | null
+          metadata?: string | null
+          read_at?: string | null
+          recipient_id?: string
+          sender_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_recipient_id_profiles_profile_id_fk"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "alerts_sender_id_profiles_profile_id_fk"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           application_id: string
@@ -650,6 +760,17 @@ export type Database = {
         | "REJECTED"
         | "COMPLETED"
         | "CANCELLED"
+      alert_status: "UNREAD" | "READ" | "ARCHIVED"
+      alert_type:
+        | "CAMPAIGN_CREATED"
+        | "CAMPAIGN_UPDATED"
+        | "APPLICATION_RECEIVED"
+        | "APPLICATION_ACCEPTED"
+        | "APPLICATION_REJECTED"
+        | "PROPOSAL_RECEIVED"
+        | "PROPOSAL_ACCEPTED"
+        | "PROPOSAL_REJECTED"
+        | "SYSTEM_NOTIFICATION"
       application_status:
         | "PENDING"
         | "ACCEPTED"
