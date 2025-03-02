@@ -170,20 +170,22 @@ export default function DetailPage({ loaderData, actionData }: Route.ComponentPr
                         )}
 
                         {campaign.campaign_status === CAMPAIGN_STATUS.PUBLISHED && (
-                            <>
-                                <Form method="post" className="inline">
-                                    <input type="hidden" name="action" value="close" />
-                                    <Button type="submit" variant="outline">마감하기</Button>
-                                </Form>
-                                <Form method="post" className="inline">
-                                    <input type="hidden" name="action" value="complete" />
-                                    <Button type="submit" variant="default">완료하기</Button>
-                                </Form>
-                            </>
+                            <Form method="post" className="inline">
+                                <input type="hidden" name="action" value="close" />
+                                <Button type="submit" variant="outline">마감하기</Button>
+                            </Form>
+                        )}
+
+                        {campaign.campaign_status === CAMPAIGN_STATUS.CLOSED && (
+                            <Form method="post" className="inline">
+                                <input type="hidden" name="action" value="complete" />
+                                <Button type="submit" variant="default">완료하기</Button>
+                            </Form>
                         )}
 
                         {(campaign.campaign_status === CAMPAIGN_STATUS.DRAFT ||
-                            campaign.campaign_status === CAMPAIGN_STATUS.PUBLISHED) && (
+                            campaign.campaign_status === CAMPAIGN_STATUS.PUBLISHED ||
+                            campaign.campaign_status === CAMPAIGN_STATUS.CLOSED) && (
                                 <Form method="post" className="inline">
                                     <input type="hidden" name="action" value="cancel" />
                                     <Button type="submit" variant="destructive">취소하기</Button>
