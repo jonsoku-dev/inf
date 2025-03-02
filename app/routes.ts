@@ -23,6 +23,15 @@ export default [
         ]),
     ]),
 
+    // 사용자 계정 관련 라우트 (인증된 모든 사용자)
+    ...prefix("/my", [
+        // 알림 관련 라우트
+        ...prefix("/alerts", [
+            index("features/alerts/pages/alerts-page.tsx"),
+            route("/settings", "features/alerts/pages/alert-settings-page.tsx"),
+        ]),
+    ]),
+
     // 캠페인 관련 라우트
     ...prefix("/campaigns", [
         // 공개 페이지

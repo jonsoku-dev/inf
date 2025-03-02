@@ -1,4 +1,22 @@
+import type { Database } from "database.types";
+import {
+  LogOutIcon,
+  SettingsIcon,
+  UserIcon,
+} from "lucide-react";
 import { Link } from "react-router";
+import { AlertIndicator } from "~/features/alerts/components/alert-indicator";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Button } from "./ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -9,25 +27,6 @@ import {
   navigationMenuTriggerStyle,
 } from "./ui/navigation-menu";
 import { Separator } from "./ui/separator";
-import { Button } from "./ui/button";
-import {
-  DropdownMenuItem,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuGroup,
-} from "./ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import {
-  LogOutIcon,
-  SettingsIcon,
-  UserIcon,
-} from "lucide-react";
-import { useAuth } from "~/features/auth/hooks/use-auth";
-import { AlertIndicator } from "~/features/alerts/components/alert-indicator";
-import type { Database } from "database.types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -142,7 +141,7 @@ export default function Navigation({ unreadAlertCount, profile }: { unreadAlertC
     <NavigationMenuItem key={menu.name}>
       {menu.items ? (
         <>
-          <Link to={menu.to} prefetch="intent">
+          <Link to={menu.to} prefetch="none">
             <NavigationMenuTrigger>{menu.name}</NavigationMenuTrigger>
           </Link>
           <NavigationMenuContent>
