@@ -58,24 +58,28 @@ export default function RatingPair({
   const [hoveredStar, setHoveredStar] = useState<number>(0);
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn("space-y-1.5 md:space-y-2", className)}>
       {label && (
-        <Label className="flex flex-col gap-px">
-          {label} {description && <small className="text-muted-foreground">{description}</small>}
+        <Label className="flex flex-col gap-0.5">
+          <span className="text-sm md:text-base">{label}</span>
+          {description && (
+            <small className="text-xs text-muted-foreground md:text-sm">{description}</small>
+          )}
         </Label>
       )}
-      <div className="mt-5 flex gap-2">
+      <div className="mt-2 flex gap-1 md:mt-3 md:gap-2">
         {[1, 2, 3, 4, 5].map((star) => (
           <label
             key={star}
             htmlFor={`rating-${star}`}
-            className="relative"
+            className="relative touch-manipulation"
             onMouseEnter={() => setHoveredStar(star)}
             onMouseLeave={() => setHoveredStar(0)}
           >
             <StarIcon
               fill={hoveredStar >= star || rating >= star ? "currentColor" : "none"}
-              className="size-5 text-yellow-500"
+              className="size-6 text-yellow-500 md:size-7"
+              strokeWidth={1.5}
             />
             <input
               type="radio"
@@ -83,7 +87,7 @@ export default function RatingPair({
               name="rating"
               value={star}
               required={required}
-              className="x-px absolute h-px opacity-0"
+              className="absolute h-full w-full cursor-pointer opacity-0"
               onChange={() => setRating(star)}
             />
           </label>

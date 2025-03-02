@@ -29,14 +29,19 @@ export default function AuthFormContainer({
   redirectTo,
 }: AuthFormContainerProps) {
   return (
-    <div className="flex flex-col items-center justify-center">
-      <Button variant="ghost" className="absolute top-8 right-8" asChild>
-        <Link to={redirectTo}>{redirectLabel}</Link>
-      </Button>
+    <div className="flex w-full flex-col items-center justify-center">
+      <div className="mb-4 flex w-full items-center justify-between md:mb-0 md:justify-end">
+        <Link to="/" className="text-lg font-bold md:hidden">Inf</Link>
+        <Button variant="ghost" className="text-sm" asChild>
+          <Link to={redirectTo}>{redirectLabel}</Link>
+        </Button>
+      </div>
 
-      <div className="flex w-full max-w-md flex-col items-center justify-center gap-10">
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        <p className="text-muted-foreground text-sm">{description}</p>
+      <div className="flex w-full max-w-md flex-col items-center justify-center gap-6 md:gap-10">
+        <div className="text-center">
+          <h1 className="mb-2 text-xl font-semibold tracking-tight md:text-2xl">{title}</h1>
+          <p className="text-muted-foreground text-sm">{description}</p>
+        </div>
         {children}
       </div>
     </div>

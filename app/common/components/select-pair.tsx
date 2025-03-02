@@ -33,21 +33,21 @@ export default function SelectPair({
 }: SelectPairProps) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="flex flex-col space-y-2">
-      <Label htmlFor={name} className="flex flex-col gap-px" onClick={() => setOpen(true)}>
-        <span>
+    <div className="flex flex-col space-y-1.5 md:space-y-2">
+      <Label htmlFor={name} className="flex flex-col gap-0.5" onClick={() => setOpen(true)}>
+        <span className="text-sm md:text-base">
           {label}
           {props.required && <span className="text-red-500">*</span>}
         </span>
-        <small className="text-gray-500">{description}</small>
+        <small className="text-xs text-gray-500 md:text-sm">{description}</small>
       </Label>
       <Select name={name} open={open} onOpenChange={setOpen} defaultValue={defaultValue}>
-        <SelectTrigger className={cn("w-full", props)}>
+        <SelectTrigger className={cn("h-9 text-sm md:h-10 md:text-base", props)}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="text-sm md:text-base">
           {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem key={option.value} value={option.value} className="py-1.5 md:py-2">
               {customRenderOption ? customRenderOption(option) : option.label}
             </SelectItem>
           ))}

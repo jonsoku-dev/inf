@@ -76,9 +76,9 @@ export default function JoinPage({ loaderData, actionData }: Route.ComponentProp
       redirectLabel="로그인"
       redirectTo="/auth/login"
     >
-      <Form method="post" className="w-full space-y-4">
+      <Form method="post" className="w-full space-y-3 md:space-y-4">
         {errors?.form && (
-          <div className="text-sm text-red-500">{errors.form}</div>
+          <div className="text-sm text-red-500 rounded-md bg-red-50 p-2">{errors.form}</div>
         )}
         {/* name */}
         <InputPair
@@ -122,7 +122,7 @@ export default function JoinPage({ loaderData, actionData }: Route.ComponentProp
         // error={errors?.password}
         />
 
-        <Button className="w-full" type="submit">
+        <Button className="w-full py-5" type="submit">
           회원가입
         </Button>
       </Form>

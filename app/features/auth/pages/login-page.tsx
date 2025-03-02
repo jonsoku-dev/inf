@@ -82,9 +82,9 @@ export default function LoginPage({ loaderData, actionData }: Route.ComponentPro
       redirectLabel="회원가입"
       redirectTo="/auth/join"
     >
-      <Form method="post" className="w-full space-y-4">
+      <Form method="post" className="w-full space-y-3 md:space-y-4">
         {errors?.form && (
-          <div className="text-sm text-red-500">{errors.form}</div>
+          <div className="text-sm text-red-500 rounded-md bg-red-50 p-2">{errors.form}</div>
         )}
         {/* email */}
         <InputPair
@@ -108,7 +108,7 @@ export default function LoginPage({ loaderData, actionData }: Route.ComponentPro
         // error={errors?.password}
         />
 
-        <Button className="w-full" type="submit">
+        <Button className="w-full py-5" type="submit">
           로그인
         </Button>
       </Form>

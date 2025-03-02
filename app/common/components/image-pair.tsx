@@ -41,15 +41,15 @@ export function ImagePair({
   shape = "square",
 }: ImagePairProps) {
   return (
-    <div className="flex flex-col space-y-2">
-      <Label htmlFor={id} className="flex flex-col gap-px">
-        {label}
-        <small className="text-muted-foreground">{description}</small>
+    <div className="flex flex-col space-y-1.5 md:space-y-2">
+      <Label htmlFor={id} className="flex flex-col gap-0.5">
+        <span className="text-sm md:text-base">{label}</span>
+        <small className="text-xs text-muted-foreground md:text-sm">{description}</small>
       </Label>
       {preview ? (
         <div
           className={cn(
-            "size-40 overflow-hidden rounded-xl shadow-xl",
+            "mx-auto size-32 overflow-hidden rounded-lg shadow-md md:size-40 md:rounded-xl md:shadow-xl",
             shape === "circle" && "rounded-full"
           )}
         >
@@ -59,18 +59,15 @@ export function ImagePair({
       <Input
         type="file"
         accept="image/*"
-        className="w-1/2"
+        className="h-9 w-full text-sm md:h-10 md:text-base"
         id={id}
         onChange={onChange}
         required={required}
         name={name}
       />
-      <div className="flex flex-col gap-px">
-        <span className="text-muted-foreground text-xs">{description}</span>
-        <span className="text-muted-foreground text-xs">
-          허용된 이미지 형식: {allowedTypes.join(", ")}
-        </span>
-        <span className="text-muted-foreground text-xs">최대 파일 크기: {maxSize}</span>
+      <div className="flex flex-col gap-0.5 text-[10px] md:text-xs">
+        <span className="text-muted-foreground">허용된 이미지 형식: {allowedTypes.join(", ")}</span>
+        <span className="text-muted-foreground">최대 파일 크기: {maxSize}</span>
       </div>
     </div>
   );
