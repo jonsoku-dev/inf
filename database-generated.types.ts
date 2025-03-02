@@ -622,42 +622,89 @@ export type Database = {
           },
         ]
       }
-      notifications: {
+      notification_reads: {
         Row: {
-          campaign_id: string | null
-          message: string
           notification_id: string
-          read_at: string | null
-          sent_at: string
+          read_at: string
+          read_id: string
           user_id: string
         }
         Insert: {
-          campaign_id?: string | null
-          message: string
-          notification_id?: string
-          read_at?: string | null
-          sent_at?: string
+          notification_id: string
+          read_at?: string
+          read_id?: string
           user_id: string
         }
         Update: {
-          campaign_id?: string | null
-          message?: string
           notification_id?: string
-          read_at?: string | null
-          sent_at?: string
+          read_at?: string
+          read_id?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "notifications_campaign_id_campaigns_campaign_id_fk"
-            columns: ["campaign_id"]
+            foreignKeyName: "notification_reads_notification_id_notifications_notification_i"
+            columns: ["notification_id"]
             isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["campaign_id"]
+            referencedRelation: "notifications"
+            referencedColumns: ["notification_id"]
           },
           {
-            foreignKeyName: "notifications_user_id_profiles_profile_id_fk"
+            foreignKeyName: "notification_reads_user_id_profiles_profile_id_fk"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          admin_id: string
+          content: string
+          created_at: string
+          expiry_date: string | null
+          is_important: boolean | null
+          is_published: boolean | null
+          notification_id: string
+          notification_type: Database["public"]["Enums"]["notification_type"]
+          publish_date: string
+          target_audience: Database["public"]["Enums"]["notification_target"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          content: string
+          created_at?: string
+          expiry_date?: string | null
+          is_important?: boolean | null
+          is_published?: boolean | null
+          notification_id?: string
+          notification_type: Database["public"]["Enums"]["notification_type"]
+          publish_date: string
+          target_audience: Database["public"]["Enums"]["notification_target"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          content?: string
+          created_at?: string
+          expiry_date?: string | null
+          is_important?: boolean | null
+          is_published?: boolean | null
+          notification_id?: string
+          notification_type?: Database["public"]["Enums"]["notification_type"]
+          publish_date?: string
+          target_audience?: Database["public"]["Enums"]["notification_target"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_admin_id_profiles_profile_id_fk"
+            columns: ["admin_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["profile_id"]
@@ -805,6 +852,8 @@ export type Database = {
         | "PARENTING"
         | "PETS"
         | "OTHER"
+      notification_target: "ALL" | "ADVERTISERS" | "INFLUENCERS"
+      notification_type: "ANNOUNCEMENT" | "SYSTEM" | "CAMPAIGN" | "proposal"
       proposal_application_status:
         | "PENDING"
         | "ACCEPTED"

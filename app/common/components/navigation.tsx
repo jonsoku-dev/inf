@@ -1,5 +1,6 @@
 import type { Database } from "database.types";
 import {
+  BellIcon,
   LogOutIcon,
   SettingsIcon,
   UserIcon,
@@ -31,6 +32,17 @@ import { Separator } from "./ui/separator";
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 const commonMenus = [
+  {
+    name: "공지사항",
+    to: "/notifications",
+    items: [
+      {
+        name: "공지사항",
+        description: "중요 공지사항 및 알림을 확인하세요",
+        to: "/notifications",
+      },
+    ],
+  },
   {
     name: "캠페인",
     to: "/campaigns",
@@ -113,11 +125,30 @@ const influencerMenus = [
   },
 ];
 
+const adminMenus = [
+  {
+    name: "관리자 메뉴",
+    to: "/admin",
+    items: [
+      {
+        name: "공지사항 관리",
+        description: "공지사항을 관리하세요",
+        to: "/admin/notifications",
+      },
+    ],
+  },
+];
+
 const userMenuItems = [
   {
     icon: UserIcon,
     label: "프로필",
     to: "/influencer/my",
+  },
+  {
+    icon: BellIcon,
+    label: "공지사항",
+    to: "/notifications",
   },
   {
     icon: SettingsIcon,
@@ -136,6 +167,7 @@ export default function Navigation({ unreadAlertCount, profile }: { unreadAlertC
   const isLoggedIn = !!user;
   const isAdvertiser = user?.role === "ADVERTISER";
   const isInfluencer = user?.role === "INFLUENCER";
+  const isAdmin = user?.role === "ADMIN";
 
   const renderMenuItems = (menu: typeof commonMenus[0]) => (
     <NavigationMenuItem key={menu.name}>
@@ -189,6 +221,7 @@ export default function Navigation({ unreadAlertCount, profile }: { unreadAlertC
             {commonMenus.map(renderMenuItems)}
             {isLoggedIn && isAdvertiser && advertiserMenus.map(renderMenuItems)}
             {isLoggedIn && isInfluencer && influencerMenus.map(renderMenuItems)}
+            {isLoggedIn && isAdmin && adminMenus.map(renderMenuItems)}
           </NavigationMenuList>
         </NavigationMenu>
       </div>

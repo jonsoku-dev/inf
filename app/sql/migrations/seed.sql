@@ -184,3 +184,131 @@ INSERT INTO proposal_applications (
     NOW() - INTERVAL '5 days',
     NOW() - INTERVAL '3 days'
 );
+
+-- 공지사항(notifications) 테이블 시드 데이터
+INSERT INTO notifications (
+    notification_id,
+    title,
+    content,
+    notification_type,
+    target_audience,
+    is_important,
+    is_published,
+    admin_id,
+    publish_date,
+    expiry_date,
+    created_at,
+    updated_at
+) VALUES 
+(
+    gen_random_uuid(),
+    '플랫폼 오픈 안내',
+    '안녕하세요, 인플루언서 마케팅 플랫폼이 정식 오픈하였습니다.
+
+본 플랫폼은 한국과 일본의 인플루언서와 광고주를 연결하는 서비스를 제공합니다.
+
+많은 이용 부탁드립니다.',
+    'ANNOUNCEMENT',
+    'ALL',
+    true,
+    true,
+    '2a831472-b6de-4cea-a4a4-8ef7520262ea', -- 관리자 ID (실제 관리자 ID로 변경 필요)
+    NOW() - INTERVAL '7 days',
+    NOW() + INTERVAL '30 days',
+    NOW() - INTERVAL '7 days',
+    NOW() - INTERVAL '7 days'
+),
+(
+    gen_random_uuid(),
+    '광고주를 위한 안내사항',
+    '광고주 여러분께,
+
+캠페인 등록 시 상세한 정보를 입력해주시면 더 많은 인플루언서들의 관심을 받을 수 있습니다.
+
+특히 예산, 기간, 요구사항 등을 명확히 기재해 주시기 바랍니다.',
+    'ANNOUNCEMENT',
+    'ADVERTISERS',
+    true,
+    true,
+    '2a831472-b6de-4cea-a4a4-8ef7520262ea', -- 관리자 ID
+    NOW() - INTERVAL '5 days',
+    NOW() + INTERVAL '60 days',
+    NOW() - INTERVAL '5 days',
+    NOW() - INTERVAL '5 days'
+),
+(
+    gen_random_uuid(),
+    '인플루언서를 위한 안내사항',
+    '인플루언서 여러분께,
+
+프로필 정보를 최대한 상세하게 작성하시면 광고주들에게 더 많은 관심을 받을 수 있습니다.
+
+포트폴리오 및 과거 협업 사례를 충실히 기재해 주시기 바랍니다.',
+    'ANNOUNCEMENT',
+    'INFLUENCERS',
+    true,
+    true,
+    '2a831472-b6de-4cea-a4a4-8ef7520262ea', -- 관리자 ID
+    NOW() - INTERVAL '5 days',
+    NOW() + INTERVAL '60 days',
+    NOW() - INTERVAL '5 days',
+    NOW() - INTERVAL '5 days'
+),
+(
+    gen_random_uuid(),
+    '시스템 점검 안내',
+    '안녕하세요, 시스템 점검 안내드립니다.
+
+다음 일정으로 시스템 점검이 예정되어 있습니다:
+- 일시: 2024년 3월 15일 02:00 ~ 05:00 (KST)
+- 영향: 서비스 일시 중단
+
+점검 시간 동안에는 서비스 이용이 제한될 수 있으니 양해 부탁드립니다.',
+    'SYSTEM',
+    'ALL',
+    true,
+    true,
+    '2a831472-b6de-4cea-a4a4-8ef7520262ea', -- 관리자 ID
+    NOW() - INTERVAL '2 days',
+    NOW() + INTERVAL '5 days',
+    NOW() - INTERVAL '2 days',
+    NOW() - INTERVAL '2 days'
+),
+(
+    gen_random_uuid(),
+    '새로운 캠페인 기능 추가',
+    '새로운 캠페인 기능이 추가되었습니다!
+
+이제 캠페인 등록 시 다음과 같은 기능을 활용하실 수 있습니다:
+- 다중 이미지 업로드
+- 상세 타겟팅 설정
+- 성과 측정 도구
+
+자세한 내용은 도움말 페이지를 참고해 주세요.',
+    'CAMPAIGN',
+    'ALL',
+    false,
+    true,
+    '2a831472-b6de-4cea-a4a4-8ef7520262ea', -- 관리자 ID
+    NOW() - INTERVAL '1 day',
+    NOW() + INTERVAL '30 days',
+    NOW() - INTERVAL '1 day',
+    NOW() - INTERVAL '1 day'
+);
+
+-- 공지사항 읽음 상태(notification_reads) 테이블 시드 데이터
+INSERT INTO notification_reads (
+    notification_id,
+    user_id,
+    read_at
+) VALUES 
+(
+    (SELECT notification_id FROM notifications WHERE title = '플랫폼 오픈 안내' LIMIT 1),
+    '5aab23d6-6fca-421d-adcb-404549b4f295', -- 사용자 ID
+    NOW() - INTERVAL '6 days'
+),
+(
+    (SELECT notification_id FROM notifications WHERE title = '인플루언서를 위한 안내사항' LIMIT 1),
+    '5aab23d6-6fca-421d-adcb-404549b4f295', -- 사용자 ID
+    NOW() - INTERVAL '4 days'
+);

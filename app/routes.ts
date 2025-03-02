@@ -119,4 +119,16 @@ export default [
             ]),
         ]),
     ]),
+
+    // 기존 라우트에 추가
+    ...prefix("/notifications", [
+        index("features/notifications/pages/notifications-page.tsx"),
+    ]),
+
+    ...prefix("/admin", [
+        ...prefix("/notifications", [
+            index("features/notifications/pages/admin/notifications-admin-page.tsx"),
+            route("/:id", "features/notifications/pages/admin/notification-form-page.tsx"),
+        ]),
+    ]),
 ] satisfies RouteConfig;

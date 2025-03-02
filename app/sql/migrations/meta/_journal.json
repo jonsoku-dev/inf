@@ -29,6 +29,13 @@
       "when": 1740919903124,
       "tag": "0003_magical_turbo",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1740924238748,
+      "tag": "0004_mean_millenium_guard",
+      "breakpoints": true
     }
   ]
 }
