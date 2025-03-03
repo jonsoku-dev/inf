@@ -111,7 +111,8 @@ export default [
         // 광고주 전용 페이지
         ...prefix("/advertiser", [
             layout("features/proposals/layouts/advertiser-layout.tsx", [
-                index("features/proposals/pages/advertiser/list-page.tsx"),
+                route("/list", "features/proposals/pages/advertiser/list-page.tsx"),
+                route("/direct", "features/proposals/pages/advertiser/direct-page.tsx"),
                 route("/:proposalId", "features/proposals/pages/advertiser/detail-page.tsx"),
                 route("/:proposalId/apply", "features/proposals/pages/advertiser/apply-page.tsx"),
                 route("/applications", "features/proposals/pages/advertiser/applications-page.tsx"),

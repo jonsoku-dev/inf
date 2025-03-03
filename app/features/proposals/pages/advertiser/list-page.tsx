@@ -13,6 +13,8 @@ import { formatCurrency } from "~/lib/utils";
 import { getServerClient } from "~/server";
 import { PROPOSAL_STATUS, TARGET_MARKET, CONTENT_TYPE_LABELS } from "../../constants";
 import type { Route } from "./+types/list-page";
+import { Avatar, AvatarFallback } from "~/common/components/ui/avatar";
+import { PlusIcon } from "lucide-react";
 
 interface ListPageProps extends Route.ComponentProps { }
 
@@ -50,21 +52,13 @@ export default function ListPage({ loaderData }: ListPageProps) {
             <div className="mb-8 flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold">인플루언서 제안 목록</h1>
-                    <p className="text-muted-foreground mt-1">인플루언서들이 제안한 협업 아이디어를 확인하세요</p>
-                </div>
-                <div className="flex gap-3">
-                    <Button asChild variant="outline">
-                        <Link to="/proposals/advertiser/applications">내 신청 목록</Link>
-                    </Button>
-                    <Button asChild>
-                        <Link to="/proposals/advertiser/direct">내 직접 제안</Link>
-                    </Button>
+                    <p className="text-muted-foreground mt-1">인플루언서들이 제안한 협업 아이디어를 확인하고 관심있는 제안에 신청하세요</p>
                 </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {proposals.map((proposal) => (
-                    <Card key={proposal.proposal_id}>
+                    <Card key={proposal.proposal_id} className="hover:shadow-md transition-shadow">
                         <CardHeader>
                             <div className="flex items-center justify-between">
                                 <Badge className={getStatusBadgeColor(proposal.proposal_status as keyof typeof PROPOSAL_STATUS)}>
@@ -74,29 +68,36 @@ export default function ListPage({ loaderData }: ListPageProps) {
                                     {getTargetMarketLabel(proposal.target_market)}
                                 </Badge>
                             </div>
-                            <CardTitle className="mt-2">{proposal.title}</CardTitle>
+                            <CardTitle className="mt-2 line-clamp-1">{proposal.title}</CardTitle>
                             <CardDescription className="line-clamp-2">
                                 {proposal.description}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                <div>
-                                    <p className="text-sm font-medium">예산</p>
-                                    <p className="text-lg font-bold">
-                                        {formatCurrency(proposal.desired_budget)}
-                                        {proposal.is_negotiable && (
-                                            <span className="ml-2 text-sm text-gray-500">(협의 가능)</span>
-                                        )}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium">콘텐츠 유형</p>
-                                    <p>{CONTENT_TYPE_LABELS[proposal.content_type as keyof typeof CONTENT_TYPE_LABELS]}</p>
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <p className="text-sm font-medium">예산</p>
+                                        <p className="text-lg font-bold">
+                                            {formatCurrency(proposal.desired_budget)}
+                                            {proposal.is_negotiable && (
+                                                <span className="ml-2 text-sm text-gray-500">(협의 가능)</span>
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-right">콘텐츠 유형</p>
+                                        <p className="text-right">{CONTENT_TYPE_LABELS[proposal.content_type as keyof typeof CONTENT_TYPE_LABELS]}</p>
+                                    </div>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium">인플루언서</p>
-                                    <p className="text-sm">{proposal.influencer?.name || "알 수 없음"}</p>
+                                    <div className="flex items-center mt-1">
+                                        <Avatar className="h-8 w-8 mr-2">
+                                            <AvatarFallback>{proposal.influencer?.name?.charAt(0) || "?"}</AvatarFallback>
+                                        </Avatar>
+                                        <p className="text-sm">{proposal.influencer?.name || "알 수 없음"}</p>
+                                    </div>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium">카테고리</p>
@@ -221,7 +222,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         .order("created_at", { ascending: false });
 
     // 각 제안에 대한 응답 정보 가져오기
-    let directProposalsWithResponses = [];
+    let directProposalsWithResponses: any[] = [];
 
     if (myDirectProposals && myDirectProposals.length > 0) {
         // 모든 제안 ID 목록

@@ -63,12 +63,17 @@ const advertiserMenus = [
       {
         name: "제안 목록",
         description: "인플루언서 제안을 확인하세요",
-        to: "/proposals/advertiser",
+        to: "/proposals/advertiser/list",
       },
       {
-        name: "제안 신청 관리",
-        description: "인플루언서들의 제안 신청을 관리하세요",
+        name: "내 신청 목록",
+        description: "내가 신청한 인플루언서 제안을 관리하세요",
         to: "/proposals/advertiser/applications",
+      },
+      {
+        name: "내 직접 제안",
+        description: "내가 인플루언서에게 직접 제안한 협업을 관리하세요",
+        to: "/proposals/advertiser/direct",
       },
     ],
   },
