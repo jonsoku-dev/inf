@@ -146,11 +146,11 @@ export default [
             route("/:applicationId", "features/campaigns/pages/admin/application-detail-page.tsx"),
         ]),
 
-        // // 제안서 관리 페이지
-        // ...prefix("/proposals", [
-        //     index("features/proposals/pages/admin/list-page.tsx"),
-        //     route("/:id", "features/proposals/pages/admin/detail-page.tsx"),
-        // ]),
+        // 제안서 관리 페이지
+        ...prefix("/proposals", [
+            index("features/proposals/pages/admin/list-page.tsx"),
+            route("/:id", "features/proposals/pages/admin/detail-page.tsx"),
+        ]),
 
         // // 인플루언서 관리 페이지
         // ...prefix("/influencers", [
