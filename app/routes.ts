@@ -131,5 +131,39 @@ export default [
             index("features/notifications/pages/admin/notifications-admin-page.tsx"),
             route("/:id", "features/notifications/pages/admin/notification-form-page.tsx"),
         ]),
+
+        // 캠페인 관리 페이지
+        ...prefix("/campaigns", [
+            index("features/campaigns/pages/admin/list-page.tsx"),
+            route("/new", "features/campaigns/pages/admin/new-page.tsx"),
+            route("/:campaignId", "features/campaigns/pages/admin/detail-page.tsx"),
+            route("/:campaignId/edit", "features/campaigns/pages/admin/edit-page.tsx"),
+            route("/:campaignId/applications", "features/campaigns/pages/admin/applications-page.tsx"),
+            route("/:campaignId/applications/:applicationId", "features/campaigns/pages/admin/application-detail-page.tsx"),
+        ]),
+
+        // // 신청 관리 페이지
+        // ...prefix("/applications", [
+        //     index("features/campaigns/pages/admin/applications-page.tsx"),
+        // ]),
+
+        // // 제안서 관리 페이지
+        // ...prefix("/proposals", [
+        //     index("features/proposals/pages/admin/list-page.tsx"),
+        //     route("/:id", "features/proposals/pages/admin/detail-page.tsx"),
+        // ]),
+
+        // // 인플루언서 관리 페이지
+        // ...prefix("/influencers", [
+        //     index("features/influencers/pages/admin/list-page.tsx"),
+        //     route("/:id", "features/influencers/pages/admin/detail-page.tsx"),
+        //     route("/:id/verification", "features/influencers/pages/admin/verification-page.tsx"),
+        // ]),
+
+        // // 사용자 관리 페이지
+        // ...prefix("/users", [
+        //     index("features/users/pages/admin/list-page.tsx"),
+        //     route("/:id", "features/users/pages/admin/detail-page.tsx"),
+        // ]),
     ]),
 ] satisfies RouteConfig;

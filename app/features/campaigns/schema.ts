@@ -58,6 +58,20 @@ export const campaigns = pgTable("campaigns", {
     keywords: jsonb("keywords").notNull().$type<string[]>(),
 });
 
+// 관리자 코멘트를 위한 새로운 테이블 추가
+export const campaignAdminComments = pgTable("campaign_admin_comments", {
+    comment_id: uuid("comment_id").primaryKey().defaultRandom(),
+    campaign_id: uuid("campaign_id")
+        .notNull()
+        .references(() => campaigns.campaign_id),
+    admin_id: uuid("admin_id")
+        .notNull()
+        .references(() => profiles.profile_id),
+    comment: text("comment").notNull(),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+    updated_at: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // 캠페인 신청
 export const applicationStatusEnum = pgEnum("application_status", [
     APPLICATION_STATUS.PENDING,

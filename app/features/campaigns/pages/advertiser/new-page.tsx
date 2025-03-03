@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { Form, redirect, useNavigate } from "react-router";
 import { DateTime } from "luxon";
+import { useEffect, useState } from "react";
+import { Form, redirect, useNavigate, type MetaFunction } from "react-router";
+import { sendCampaignCreatedAlert } from "~/features/alerts/utils/alert-utils";
 import { getServerClient } from "~/server";
 import { CampaignForm } from "../../components/campaign-form";
 import type { Route } from "./+types/new-page";
-import { sendCampaignCreatedAlert } from "~/features/alerts/utils/alert-utils";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
@@ -128,9 +128,9 @@ export const action = async ({ request }: Route.ActionArgs) => {
     }
 };
 
-export const meta: Route.MetaFunction = () => {
+export const meta: MetaFunction = () => {
     return [
-        { title: "새 캠페인 | Inf" },
+        { title: "캠페인 등록 | Inf" },
         { name: "description", content: "새로운 캠페인을 등록하세요" },
     ];
 };

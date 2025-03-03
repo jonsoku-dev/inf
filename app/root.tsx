@@ -68,11 +68,34 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   }
 };
 
+// 앱 레이아웃 컴포넌트 분리
+interface AppLayoutProps {
+  children: React.ReactNode;
+  isAuthenticated: boolean;
+  unreadAlertCount: number;
+  profile: any;
+  isLoading: boolean;
+  pathname: string;
+}
+
+function AppLayout({ children, isAuthenticated, unreadAlertCount, profile, isLoading, pathname }: AppLayoutProps) {
+  return (
+    <div className={cn({
+      "px-20 py-28": !pathname.includes("/auth"),
+      "opacity-50 transition-opacity duration-300 animate-pulse": isLoading,
+    })}>
+      {isAuthenticated && <Navigation unreadAlertCount={unreadAlertCount} profile={profile} />}
+      {children}
+    </div>
+  );
+}
+
 export default function Root() {
   const { isAuthenticated, unreadAlertCount, profile } = useLoaderData<typeof loader>();
   const { pathname } = useLocation();
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
+
   // 기본 설정
   Settings.defaultLocale = "ko";
   Settings.defaultZone = "Asia/Tokyo";
@@ -85,15 +108,17 @@ export default function Root() {
         <Meta />
         <Links />
       </head>
-      <body >
+      <body suppressHydrationWarning={true}>
         <main className="min-h-full">
-          <div className={cn({
-            "px-20 py-28": !pathname.includes("/auth"),
-            "opacity-50 transition-opacity duration-300 animate-pulse": isLoading,
-          })}>
-            {isAuthenticated && <Navigation unreadAlertCount={unreadAlertCount} profile={profile} />}
+          <AppLayout
+            isAuthenticated={isAuthenticated}
+            unreadAlertCount={unreadAlertCount}
+            profile={profile}
+            isLoading={isLoading}
+            pathname={pathname}
+          >
             <Outlet />
-          </div>
+          </AppLayout>
           <Toaster />
         </main>
         <ScrollRestoration />
@@ -118,14 +143,26 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="container mx-auto p-4 pt-16">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full overflow-x-auto p-4">
-          <code>{stack}</code>
-        </pre>
-      )}
-    </main>
+    <html lang="ko" className="h-full">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <main className="container mx-auto p-4 pt-16">
+          <h1>{message}</h1>
+          <p>{details}</p>
+          {stack && (
+            <pre className="w-full overflow-x-auto p-4">
+              <code>{stack}</code>
+            </pre>
+          )}
+        </main>
+        <ScrollRestoration />
+        <Scripts />
+      </body>
+    </html>
   );
 }

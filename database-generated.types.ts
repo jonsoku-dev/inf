@@ -314,6 +314,48 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_admin_comments: {
+        Row: {
+          admin_id: string
+          campaign_id: string
+          comment: string
+          comment_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          campaign_id: string
+          comment: string
+          comment_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          campaign_id?: string
+          comment?: string
+          comment_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_admin_comments_admin_id_profiles_profile_id_fk"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "campaign_admin_comments_campaign_id_campaigns_campaign_id_fk"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["campaign_id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           advertiser_id: string
@@ -853,7 +895,7 @@ export type Database = {
         | "PETS"
         | "OTHER"
       notification_target: "ALL" | "ADVERTISERS" | "INFLUENCERS"
-      notification_type: "ANNOUNCEMENT" | "SYSTEM" | "CAMPAIGN" | "proposal"
+      notification_type: "ANNOUNCEMENT" | "SYSTEM" | "CAMPAIGN" | "PROPOSAL"
       proposal_application_status:
         | "PENDING"
         | "ACCEPTED"

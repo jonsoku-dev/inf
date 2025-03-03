@@ -110,13 +110,38 @@ const influencerMenus = [
 
 const adminMenus = [
   {
-    name: "관리자 메뉴",
+    name: "관리자",
     to: "/admin",
     items: [
       {
         name: "공지사항 관리",
         description: "공지사항을 관리하세요",
         to: "/admin/notifications",
+      },
+      {
+        name: "캠페인 관리",
+        description: "등록된 캠페인을 관리하세요",
+        to: "/admin/campaigns",
+      },
+      {
+        name: "제안서 관리",
+        description: "등록된 제안서를 관리하세요",
+        to: "/admin/proposals",
+      },
+      {
+        name: "인플루언서 관리",
+        description: "등록된 인플루언서를 관리하세요",
+        to: "/admin/influencers",
+      },
+      {
+        name: "지원서 관리",
+        description: "캠페인 지원서를 관리하세요",
+        to: "/admin/applications",
+      },
+      {
+        name: "사용자 관리",
+        description: "사용자 계정을 관리하세요",
+        to: "/admin/users",
       },
     ],
   },
