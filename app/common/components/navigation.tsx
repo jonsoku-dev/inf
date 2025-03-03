@@ -43,28 +43,6 @@ const commonMenus = [
       },
     ],
   },
-  {
-    name: "캠페인",
-    to: "/campaigns",
-    items: [
-      {
-        name: "모든 캠페인",
-        description: "진행중인 모든 캠페인을 확인하세요",
-        to: "/campaigns",
-      },
-    ],
-  },
-  {
-    name: "인플루언서",
-    to: "/influencer/public",
-    items: [
-      {
-        name: "인플루언서 목록",
-        description: "등록된 인플루언서들을 확인하세요",
-        to: "/influencer/public",
-      },
-    ],
-  },
 ];
 
 const advertiserMenus = [
@@ -134,6 +112,17 @@ const adminMenus = [
         name: "공지사항 관리",
         description: "공지사항을 관리하세요",
         to: "/admin/notifications",
+      },
+    ],
+  },
+  {
+    name: "인플루언서",
+    to: "/influencer/public",
+    items: [
+      {
+        name: "인플루언서 목록",
+        description: "등록된 인플루언서들을 확인하세요",
+        to: "/influencer/public",
       },
     ],
   },

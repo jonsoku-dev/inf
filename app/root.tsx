@@ -85,13 +85,15 @@ export default function Root() {
         <Meta />
         <Links />
       </head>
-      <body className={cn({
-        "px-20 py-28": !pathname.includes("/auth"),
-        "opacity-50 transition-opacity duration-300 animate-pulse": isLoading,
-      })}>
-        {isAuthenticated && <Navigation unreadAlertCount={unreadAlertCount} profile={profile} />}
+      <body >
         <main className="min-h-full">
-          <Outlet />
+          <div className={cn({
+            "px-20 py-28": !pathname.includes("/auth"),
+            "opacity-50 transition-opacity duration-300 animate-pulse": isLoading,
+          })}>
+            {isAuthenticated && <Navigation unreadAlertCount={unreadAlertCount} profile={profile} />}
+            <Outlet />
+          </div>
           <Toaster />
         </main>
         <ScrollRestoration />
