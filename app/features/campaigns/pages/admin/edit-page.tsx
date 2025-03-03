@@ -1,10 +1,9 @@
 import type { Database } from "database-generated.types";
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Checkbox } from "~/common/components/ui/checkbox";
 import { CAMPAIGN_STATUS, CAMPAIGN_TYPE } from "~/features/campaigns/constants";
-import supabase from "~/supa-server";
 
 import { Button } from "~/common/components/ui/button";
 import {
@@ -23,8 +22,10 @@ import {
     SelectValue,
 } from "~/common/components/ui/select";
 import { Textarea } from "~/common/components/ui/textarea";
-import type { Route } from "./+types/edit-page";
 import { getServerClient } from "~/server";
+import type { Route } from "./+types/edit-page";
+import { DateTime } from "luxon";
+import { Label } from "~/common/components/ui/label";
 
 export const loader = async ({ params, request }: Route.LoaderArgs) => {
     const { campaignId } = params;
@@ -75,8 +76,13 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
     const description = formData.get("description") as string;
     const advertiserId = formData.get("advertiserId") as string;
     const budget = parseInt(formData.get("budget") as string);
-    const startDate = formData.get("startDate") as string;
-    const endDate = formData.get("endDate") as string;
+    const startDateStr = formData.get("startDate") as string;
+    const endDateStr = formData.get("endDate") as string;
+
+    // Luxon을 사용하여 날짜 형식 변환
+    const startDate = DateTime.fromISO(startDateStr).toISODate();
+    const endDate = DateTime.fromISO(endDateStr).toISODate();
+
     const targetMarket = formData.get("targetMarket") as Database["public"]["Enums"]["target_market"];
     const requirements = formData.get("requirements") as string;
     const requirementsArray = requirements ? [requirements] : []; // 문자열을 배열로 변환
@@ -84,6 +90,7 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
     const campaignStatus = formData.get("campaignStatus") as Database["public"]["Enums"]["campaign_status"];
     const isNegotiable = formData.get("is_negotiable") === "on";
     const isUrgent = formData.get("is_urgent") === "on";
+    const adminComment = formData.get("adminComment") as string;
 
     // 필수 필드 검증
     if (!title || !description || !advertiserId || !budget || !startDate || !endDate || !targetMarket || !campaignStatus) {
@@ -113,6 +120,40 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
 
         if (error) throw error;
 
+        // 어드민 코멘트가 있는 경우 저장
+        if (adminComment && adminComment.trim() !== '') {
+            // 현재 로그인한 관리자 정보 가져오기
+            const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+            if (sessionError) {
+                console.error("Error getting session:", sessionError);
+                return { error: "세션 정보를 가져오는데 실패했습니다." };
+            }
+
+            const adminId = sessionData.session?.user.id;
+
+            if (!adminId) {
+                console.error("Admin ID not found");
+                return { error: "관리자 ID를 찾을 수 없습니다." };
+            }
+
+            // 어드민 코멘트 저장
+            const { error: commentError } = await supabase
+                .from('campaign_admin_comments')
+                .insert({
+                    campaign_id: campaignId,
+                    admin_id: adminId,
+                    comment: adminComment,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
+
+            if (commentError) {
+                console.error("Error saving admin comment:", commentError);
+                return { error: "어드민 코멘트 저장에 실패했습니다." };
+            }
+        }
+
         return { success: true, message: "캠페인이 성공적으로 업데이트되었습니다." };
     } catch (error) {
         console.error("Error updating campaign:", error);
@@ -138,6 +179,7 @@ export default function CampaignEditAdminPage({ loaderData, actionData }: {
         message?: string
     }
 }) {
+    const navigate = useNavigate();
     const { campaign, advertisers } = loaderData;
 
     // 캠페인 데이터 초기화
@@ -156,6 +198,14 @@ export default function CampaignEditAdminPage({ loaderData, actionData }: {
     // 카테고리와 키워드 문자열로 변환
     const categoriesString = Array.isArray(campaign.categories) ? campaign.categories.join(", ") : "";
     const keywordsString = Array.isArray(campaign.keywords) ? campaign.keywords.join(", ") : "";
+
+    // Luxon을 사용하여 날짜 형식 변환
+    const formattedStartDate = campaign?.start_date
+        ? DateTime.fromISO(campaign.start_date).toISODate() || ''
+        : '';
+    const formattedEndDate = campaign?.end_date
+        ? DateTime.fromISO(campaign.end_date).toISODate() || ''
+        : '';
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -242,31 +292,25 @@ export default function CampaignEditAdminPage({ loaderData, actionData }: {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label htmlFor="start_date" className="text-sm font-medium">
-                                            시작일 <span className="text-red-500">*</span>
-                                        </label>
-                                        <Input
-                                            id="start_date"
-                                            name="start_date"
-                                            type="date"
-                                            defaultValue={campaign.start_date}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label htmlFor="end_date" className="text-sm font-medium">
-                                            종료일 <span className="text-red-500">*</span>
-                                        </label>
-                                        <Input
-                                            id="end_date"
-                                            name="end_date"
-                                            type="date"
-                                            defaultValue={campaign.end_date}
-                                            required
-                                        />
-                                    </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="startDate">시작일</Label>
+                                    <Input
+                                        id="startDate"
+                                        name="startDate"
+                                        type="date"
+                                        defaultValue={formattedStartDate}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="endDate">종료일</Label>
+                                    <Input
+                                        id="endDate"
+                                        name="endDate"
+                                        type="date"
+                                        defaultValue={formattedEndDate}
+                                        required
+                                    />
                                 </div>
 
                                 <div className="space-y-2">
@@ -411,6 +455,19 @@ export default function CampaignEditAdminPage({ loaderData, actionData }: {
                                     />
                                     <p className="text-xs text-gray-500">
                                         각 줄에 하나의 요구사항을 입력하세요.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="adminComment">관리자 코멘트</Label>
+                                    <Textarea
+                                        id="adminComment"
+                                        name="adminComment"
+                                        placeholder="캠페인 수정에 대한 코멘트를 입력하세요"
+                                        rows={3}
+                                    />
+                                    <p className="text-sm text-gray-500">
+                                        이 코멘트는 내부 관리용으로만 사용되며, 광고주에게는 표시되지 않습니다.
                                     </p>
                                 </div>
                             </div>

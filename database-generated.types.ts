@@ -263,6 +263,7 @@ export type Database = {
           application_status: Database["public"]["Enums"]["application_status"]
           applied_at: string
           campaign_id: string
+          created_at: string
           influencer_id: string
           message: string
           updated_at: string
@@ -272,6 +273,7 @@ export type Database = {
           application_status?: Database["public"]["Enums"]["application_status"]
           applied_at?: string
           campaign_id: string
+          created_at?: string
           influencer_id: string
           message: string
           updated_at?: string
@@ -281,6 +283,7 @@ export type Database = {
           application_status?: Database["public"]["Enums"]["application_status"]
           applied_at?: string
           campaign_id?: string
+          created_at?: string
           influencer_id?: string
           message?: string
           updated_at?: string

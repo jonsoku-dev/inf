@@ -2,6 +2,7 @@ import type { Database } from "database-generated.types";
 import { useState } from "react";
 import { Link, useNavigate, type MetaFunction } from "react-router";
 import { CAMPAIGN_STATUS } from "~/features/campaigns/constants";
+import { DateTime } from "luxon";
 
 import { MoreHorizontal, Plus, Search } from "lucide-react";
 import { Badge } from "~/common/components/ui/badge";
@@ -136,12 +137,7 @@ const getStatusBadgeVariant = (status: string) => {
 // 날짜 포맷팅 함수
 const formatDate = (dateString: string) => {
     if (!dateString) return "-";
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    }).format(date);
+    return DateTime.fromISO(dateString).toFormat('yyyy년 MM월 dd일');
 };
 
 // 타겟 시장 표시 함수

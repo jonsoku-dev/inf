@@ -2,6 +2,8 @@ import type { Database } from "database-generated.types";
 import { useState } from "react";
 import { useNavigate, Form, useNavigation, useActionData } from "react-router";
 import { CAMPAIGN_STATUS } from "~/features/campaigns/constants";
+import { DateTime } from "luxon";
+import { redirect } from "react-router";
 
 import {
     AlertCircle, ArrowLeft, CheckCircle,
@@ -47,101 +49,95 @@ type ActionData = ActionDataSuccess | ActionDataError;
 
 export const loader = async ({ params, request }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
-    const { campaignId } = params;
+    const campaignId = params.campaignId;
 
     if (!campaignId) {
-        throw new Response("캠페인 ID가 필요합니다", { status: 400 });
+        return redirect("/admin/campaigns");
     }
 
-    try {
-        // 캠페인 정보 가져오기
-        const { data: campaignData, error: campaignError } = await supabase
-            .from('campaigns')
-            .select(`
-                *,
-                advertiser:profiles(*)
-            `)
-            .eq('campaign_id', campaignId);
+    // 캠페인 정보 가져오기
+    const { data: campaignData, error: campaignError } = await supabase
+        .from('campaigns')
+        .select(`
+            *,
+            advertiser:profiles(*)
+        `)
+        .eq('campaign_id', campaignId);
 
-        if (campaignError) throw campaignError;
+    if (campaignError) {
+        console.error("Error fetching campaign:", campaignError);
+        return redirect("/admin/campaigns");
+    }
 
-        // 결과가 없는 경우 처리
-        if (!campaignData || campaignData.length === 0) {
-            throw new Response("캠페인을 찾을 수 없습니다", { status: 404 });
-        }
+    // 결과가 없는 경우 처리
+    if (!campaignData || campaignData.length === 0) {
+        console.error("Campaign not found");
+        return redirect("/admin/campaigns");
+    }
 
-        const campaign = campaignData[0];
+    const campaign = campaignData[0];
 
-        // 관리자 코멘트 가져오기
-        const { data: adminComments, error: commentsError } = await supabase
-            .from('campaign_admin_comments')
-            .select(`
-                *,
-                admin:profiles(*)
-            `)
-            .eq('campaign_id', campaignId)
-            .order('created_at', { ascending: false });
+    // 캠페인 신청 정보 가져오기
+    const { data: applications, error: applicationsError } = await supabase
+        .from('applications')
+        .select(`
+            application_id,
+            application_status,
+            message,
+            influencer:profiles(profile_id, name, username)
+        `)
+        .eq('campaign_id', campaignId);
 
-        if (commentsError) throw commentsError;
+    if (applicationsError) {
+        console.error("Error fetching applications:", applicationsError);
+    }
 
-        // 지원자 정보 가져오기
-        const { data: applications, error: applicationsError } = await supabase
-            .from('applications')
-            .select(`
-                *,
-                influencer:profiles(*)
-            `)
-            .eq('campaign_id', campaignId);
+    // 어드민 코멘트 가져오기
+    const { data: adminComments, error: commentsError } = await supabase
+        .from('campaign_admin_comments')
+        .select(`
+            comment_id,
+            comment,
+            created_at,
+            admin:profiles(name, username)
+        `)
+        .eq('campaign_id', campaignId)
+        .order('created_at', { ascending: false });
 
-        if (applicationsError) throw applicationsError;
+    if (commentsError) {
+        console.error("Error fetching admin comments:", commentsError);
+    }
 
-        return {
-            campaign,
-            adminComments: adminComments || [],
-            applications: applications || [],
-        };
-    } catch (error) {
-        throw new Response("캠페인 정보를 가져오는데 실패했습니다", { status: 500 });
+    return {
+        campaign,
+        applications: applications || [],
+        adminComments: adminComments || []
     };
 };
 
 export const action = async ({ params, request }: Route.ActionArgs) => {
     const { supabase } = getServerClient(request);
-    const { campaignId } = params;
-    const formData = await request.formData();
-    const intent = formData.get("intent");
+    const campaignId = params.campaignId;
 
     if (!campaignId) {
-        return new Response(JSON.stringify({ error: "캠페인 ID가 필요합니다" }), {
-            status: 400,
-            headers: { "Content-Type": "application/json" }
-        });
+        return { error: "캠페인 ID가 필요합니다." };
     }
 
+    const formData = await request.formData();
+    const intent = formData.get("intent") as string;
+
+    // 상태 업데이트 처리
     if (intent === "update-status") {
         const newStatus = formData.get("status") as Database["public"]["Enums"]["campaign_status"];
         const adminComment = formData.get("adminComment") as string;
 
-        if (!Object.values(CAMPAIGN_STATUS).includes(newStatus)) {
-            return new Response(JSON.stringify({ error: "유효하지 않은 상태입니다" }), {
-                status: 400,
-                headers: { "Content-Type": "application/json" }
-            });
+        if (!newStatus) {
+            return { error: "상태 값이 필요합니다." };
         }
 
         try {
-            // 트랜잭션 시작
-            const { data: { user } } = await supabase.auth.getUser();
-            console.log({ user });
-            if (!user?.id) {
-                return new Response(JSON.stringify({ error: "인증이 필요합니다" }), {
-                    status: 401,
-                    headers: { "Content-Type": "application/json" }
-                });
-            }
-
-            // 1. 캠페인 상태 업데이트
-            const { error: campaignError } = await supabase
+            // 캠페인 상태 업데이트
+            const { error } = await supabase
                 .from('campaigns')
                 .update({
                     campaign_status: newStatus,
@@ -149,37 +145,97 @@ export const action = async ({ params, request }: Route.ActionArgs) => {
                 })
                 .eq('campaign_id', campaignId);
 
-            if (campaignError) throw campaignError;
+            if (error) throw error;
 
-            // 2. 관리자 코멘트가 있는 경우 코멘트 추가
+            // 어드민 코멘트가 있는 경우 저장
             if (adminComment && adminComment.trim() !== '') {
+                // 현재 로그인한 관리자 정보 가져오기
+                const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+                if (sessionError) {
+                    console.error("Error getting session:", sessionError);
+                    return { error: "세션 정보를 가져오는데 실패했습니다." };
+                }
+
+                const adminId = sessionData.session?.user.id;
+
+                if (!adminId) {
+                    console.error("Admin ID not found");
+                    return { error: "관리자 ID를 찾을 수 없습니다." };
+                }
+
+                // 어드민 코멘트 저장
                 const { error: commentError } = await supabase
                     .from('campaign_admin_comments')
                     .insert({
                         campaign_id: campaignId,
-                        admin_id: user.id,
+                        admin_id: adminId,
                         comment: adminComment,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
                     });
 
-                if (commentError) throw commentError;
+                if (commentError) {
+                    console.error("Error saving admin comment:", commentError);
+                    return { error: "어드민 코멘트 저장에 실패했습니다." };
+                }
             }
 
-            return new Response(JSON.stringify({ success: true, message: "캠페인 상태가 업데이트되었습니다" }), {
-                status: 200,
-                headers: { "Content-Type": "application/json" }
-            });
+            return { success: true, message: "캠페인 상태가 성공적으로 업데이트되었습니다." };
         } catch (error) {
-            return new Response(JSON.stringify({ error: "캠페인 상태 업데이트에 실패했습니다" }), {
-                status: 500,
-                headers: { "Content-Type": "application/json" }
-            });
+            console.error("Error updating campaign status:", error);
+            return { error: "캠페인 상태 업데이트에 실패했습니다." };
         }
     }
 
-    return new Response(JSON.stringify({ error: "알 수 없는 작업입니다" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-    });
+    // 어드민 코멘트 추가 처리
+    if (intent === "add-comment") {
+        const comment = formData.get("comment") as string;
+
+        if (!comment || comment.trim() === '') {
+            return { error: "코멘트 내용이 필요합니다." };
+        }
+
+        try {
+            // 현재 로그인한 관리자 정보 가져오기
+            const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+            if (sessionError) {
+                console.error("Error getting session:", sessionError);
+                return { error: "세션 정보를 가져오는데 실패했습니다." };
+            }
+
+            const adminId = sessionData.session?.user.id;
+
+            if (!adminId) {
+                console.error("Admin ID not found");
+                return { error: "관리자 ID를 찾을 수 없습니다." };
+            }
+
+            // 어드민 코멘트 저장
+            const { error: commentError } = await supabase
+                .from('campaign_admin_comments')
+                .insert({
+                    campaign_id: campaignId,
+                    admin_id: adminId,
+                    comment,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
+
+            if (commentError) {
+                console.error("Error saving admin comment:", commentError);
+                return { error: "어드민 코멘트 저장에 실패했습니다." };
+            }
+
+            return { success: true, message: "코멘트가 성공적으로 추가되었습니다." };
+        } catch (error) {
+            console.error("Error adding comment:", error);
+            return { error: "코멘트 추가에 실패했습니다." };
+        }
+    }
+
+    return { error: "알 수 없는 작업입니다." };
 };
 
 export const meta = ({ data }: Route.MetaArgs) => {
@@ -190,7 +246,7 @@ export const meta = ({ data }: Route.MetaArgs) => {
 };
 
 export default function CampaignDetailAdminPage({ loaderData }: Route.ComponentProps) {
-    const { campaign, adminComments, applications } = loaderData;
+    const { campaign, applications, adminComments } = loaderData;
     const [selectedStatus, setSelectedStatus] = useState<Database["public"]["Enums"]["campaign_status"]>(campaign.campaign_status);
     const [adminComment, setAdminComment] = useState("");
     const navigate = useNavigate();
@@ -215,12 +271,16 @@ export default function CampaignDetailAdminPage({ loaderData }: Route.ComponentP
         }
     };
 
+    // 날짜 포맷팅 함수
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString("ko-KR", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        });
+        if (!dateString) return "-";
+        return DateTime.fromISO(dateString).toFormat('yyyy년 MM월 dd일');
+    };
+
+    // 날짜 및 시간 포맷팅 함수
+    const formatDateTime = (dateString: string) => {
+        if (!dateString) return "-";
+        return DateTime.fromISO(dateString).toFormat('yyyy년 MM월 dd일 HH:mm');
     };
 
     const formatCurrency = (amount: number) => {
@@ -320,25 +380,32 @@ export default function CampaignDetailAdminPage({ loaderData }: Route.ComponentP
                     </Card>
 
                     {/* 관리자 코멘트 섹션 */}
-                    <Card>
+                    <Card className="mt-6">
                         <CardHeader>
                             <CardTitle>관리자 코멘트</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            {adminComments.length > 0 ? (
+                        <CardContent>
+                            {adminComments && adminComments.length > 0 ? (
                                 <div className="space-y-4">
                                     {adminComments.map((comment: any) => (
-                                        <div key={comment.comment_id} className="p-3 bg-gray-50 rounded-md">
+                                        <div key={comment.comment_id} className="p-4 border rounded-md">
                                             <div className="flex justify-between items-start">
-                                                <div className="font-medium">{comment.admin?.name || '관리자'}</div>
-                                                <div className="text-sm text-gray-500">{formatDate(comment.created_at)}</div>
+                                                <div>
+                                                    <h3 className="font-medium">{comment.admin?.name || '관리자'}</h3>
+                                                    <p className="text-sm text-gray-500">{comment.admin?.username || ''}</p>
+                                                </div>
+                                                <div className="text-sm text-gray-500">
+                                                    {formatDateTime(comment.created_at)}
+                                                </div>
                                             </div>
-                                            <p className="mt-1 whitespace-pre-line">{comment.comment}</p>
+                                            <div className="mt-2">
+                                                <p className="text-sm">{comment.comment}</p>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-gray-500">아직 코멘트가 없습니다.</p>
+                                <p className="text-gray-500">아직 등록된 코멘트가 없습니다.</p>
                             )}
                         </CardContent>
                     </Card>

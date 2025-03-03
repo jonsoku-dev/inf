@@ -138,14 +138,13 @@ export default [
             route("/new", "features/campaigns/pages/admin/new-page.tsx"),
             route("/:campaignId", "features/campaigns/pages/admin/detail-page.tsx"),
             route("/:campaignId/edit", "features/campaigns/pages/admin/edit-page.tsx"),
-            route("/:campaignId/applications", "features/campaigns/pages/admin/applications-page.tsx"),
-            route("/:campaignId/applications/:applicationId", "features/campaigns/pages/admin/application-detail-page.tsx"),
         ]),
 
-        // // 신청 관리 페이지
-        // ...prefix("/applications", [
-        //     index("features/campaigns/pages/admin/applications-page.tsx"),
-        // ]),
+        // 신청 관리 페이지
+        ...prefix("/applications", [
+            index("features/campaigns/pages/admin/applications-page.tsx"),
+            route("/:applicationId", "features/campaigns/pages/admin/application-detail-page.tsx"),
+        ]),
 
         // // 제안서 관리 페이지
         // ...prefix("/proposals", [

@@ -2,8 +2,9 @@ import type { Database } from "database-generated.types";
 import { useState } from "react";
 import { Link } from "react-router";
 import { APPLICATION_STATUS } from "~/features/campaigns/constants";
+import { DateTime } from "luxon";
 
-import { MoreHorizontal, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreHorizontal, Search } from "lucide-react";
 import { Badge } from "~/common/components/ui/badge";
 import { Button } from "~/common/components/ui/button";
 import {
@@ -17,6 +18,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "~/common/components/ui/dropdown-menu";
 import { Input } from "~/common/components/ui/input";
@@ -53,13 +55,13 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
     let query = supabase
         .from('applications')
         .select(`
-      *,
-      campaign:campaigns(*),
-      influencer:profiles(*)
-    `, { count: 'exact' });
+            *,
+            campaign:campaigns(*),
+            influencer:profiles(*)
+        `, { count: 'exact' });
 
     // 필터 적용
-    if (status) {
+    if (status && status !== "ALL") {
         query = query.eq('application_status', status as Database["public"]["Enums"]["application_status"]);
     }
 
@@ -72,9 +74,11 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
     }
 
     // 페이지네이션 및 정렬 적용
-    const { data: applications, error, count } = await query
-        .order('applied_at', { ascending: false })
+    query = query
+        .order('created_at', { ascending: false })
         .range(offset, offset + pageSize - 1);
+
+    const { data: applications, error, count } = await query;
 
     if (error) {
         console.error("Error fetching applications:", error);
@@ -135,8 +139,15 @@ export const action = async ({ request }: Route.ActionArgs) => {
 
 export const meta = () => {
     return [
-        { title: "캠페인 신청 관리 - 관리자" },
-        { name: "description", content: "인플루언서 캠페인 신청 관리 페이지입니다." }
+        { title: "신청 관리 - 관리자" },
+        {
+            property: "og:title",
+            content: "신청 관리 - 관리자",
+        },
+        {
+            name: "description",
+            content: "신청 관리 - 관리자",
+        },
     ];
 };
 
@@ -144,7 +155,7 @@ export const meta = () => {
 const getStatusBadgeVariant = (status: string) => {
     switch (status) {
         case APPLICATION_STATUS.PENDING:
-            return "warning";
+            return "outline";
         case APPLICATION_STATUS.ACCEPTED:
             return "success";
         case APPLICATION_STATUS.REJECTED:
@@ -161,15 +172,10 @@ const getStatusBadgeVariant = (status: string) => {
 // 날짜 포맷팅 함수
 const formatDate = (dateString: string) => {
     if (!dateString) return "-";
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    }).format(date);
+    return DateTime.fromISO(dateString).toFormat('yyyy년 MM월 dd일');
 };
 
-export default function CampaignApplicationsAdminPage({ loaderData, actionData }: Route.ComponentProps) {
+export default function ApplicationsAdminPage({ loaderData, actionData }: Route.ComponentProps) {
     const {
         applications,
         totalPages,
@@ -182,6 +188,7 @@ export default function CampaignApplicationsAdminPage({ loaderData, actionData }
 
     const [search, setSearch] = useState(initialSearch);
     const [status, setStatus] = useState(initialStatus);
+    const [campaignId, setCampaignId] = useState(initialCampaignId);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // 검색 핸들러
@@ -195,9 +202,16 @@ export default function CampaignApplicationsAdminPage({ loaderData, actionData }
 
     // 상태 필터 핸들러
     const handleStatusChange = (value: string) => {
-        setStatus(value);
         const url = new URL(window.location.href);
         url.searchParams.set("status", value);
+        url.searchParams.set("page", "1");
+        window.location.href = url.toString();
+    };
+
+    // 캠페인 필터 초기화 핸들러
+    const handleClearCampaignFilter = () => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("campaignId");
         url.searchParams.set("page", "1");
         window.location.href = url.toString();
     };
@@ -205,256 +219,226 @@ export default function CampaignApplicationsAdminPage({ loaderData, actionData }
     // 상태 업데이트 핸들러
     const handleStatusUpdate = async (applicationId: string, newStatus: string) => {
         setIsSubmitting(true);
+        try {
+            const formData = new FormData();
+            formData.append("applicationId", applicationId);
+            formData.append("status", newStatus);
 
-        const form = document.createElement("form");
-        form.method = "post";
+            const response = await fetch("/admin/applications", {
+                method: "POST",
+                body: formData
+            });
 
-        const applicationIdInput = document.createElement("input");
-        applicationIdInput.name = "applicationId";
-        applicationIdInput.value = applicationId;
-        form.appendChild(applicationIdInput);
+            if (!response.ok) {
+                throw new Error("상태 업데이트에 실패했습니다.");
+            }
 
-        const statusInput = document.createElement("input");
-        statusInput.name = "status";
-        statusInput.value = newStatus;
-        form.appendChild(statusInput);
-
-        document.body.appendChild(form);
-        form.submit();
+            // 페이지 새로고침
+            window.location.reload();
+        } catch (error) {
+            console.error("Error updating status:", error);
+            alert("상태 업데이트에 실패했습니다.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
-    // 페이지네이션 계산
+    // 페이지네이션 범위 계산
     const paginationRange = () => {
         const range = [];
-        const maxPages = 5;
-        let start = Math.max(1, currentPage - Math.floor(maxPages / 2));
-        let end = Math.min(totalPages, start + maxPages - 1);
+        const maxPages = Math.min(totalPages, 5);
+        let startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(startPage + maxPages - 1, totalPages);
 
-        if (end - start + 1 < maxPages) {
-            start = Math.max(1, end - maxPages + 1);
+        if (endPage - startPage + 1 < maxPages) {
+            startPage = Math.max(1, endPage - maxPages + 1);
         }
 
-        for (let i = start; i <= end; i++) {
+        for (let i = startPage; i <= endPage; i++) {
             range.push(i);
         }
+
         return range;
     };
 
     return (
-        <div className="container mx-auto py-8">
-            {actionData?.success && (
-                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                    {actionData.message}
-                </div>
-            )}
-
-            {actionData?.error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    {actionData.error}
-                </div>
-            )}
-
+        <div className="container mx-auto py-6">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold">캠페인 신청 관리</h1>
-                <div className="text-sm text-gray-500">
-                    총 <span className="font-medium">{totalCount}</span>개의 신청
-                </div>
+                <h1 className="text-2xl font-bold">신청 관리</h1>
             </div>
 
-            <Card className="mb-6">
-                <CardHeader className="pb-3">
-                    <CardTitle>필터 및 검색</CardTitle>
-                    <CardDescription>신청 목록을 필터링하고 검색합니다.</CardDescription>
+            {/* 필터 및 검색 */}
+            <div className="mb-6 flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                    <form onSubmit={handleSearch} className="flex gap-2">
+                        <Input
+                            type="text"
+                            placeholder="인플루언서 이름 또는 캠페인 제목 검색"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="flex-1"
+                        />
+                        <Button type="submit" variant="outline" size="icon">
+                            <Search className="h-4 w-4" />
+                        </Button>
+                    </form>
+                </div>
+                <div className="w-full md:w-48">
+                    <Select value={status} onValueChange={handleStatusChange}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="상태 필터" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="ALL">모든 상태</SelectItem>
+                            {Object.values(APPLICATION_STATUS).map((status) => (
+                                <SelectItem key={status} value={status}>
+                                    {status}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                {campaignId && (
+                    <Button variant="outline" onClick={handleClearCampaignFilter}>
+                        캠페인 필터 해제
+                    </Button>
+                )}
+            </div>
+
+            {/* 신청 목록 */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>신청 목록</CardTitle>
+                    <CardDescription>
+                        총 {totalCount}개의 신청이 있습니다.
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <div className="w-full md:w-1/3">
-                            <form onSubmit={handleSearch} className="flex gap-2">
-                                <Input
-                                    placeholder="인플루언서 또는 캠페인 검색"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    className="flex-1"
-                                />
-                                <Button type="submit" size="icon">
-                                    <Search className="h-4 w-4" />
-                                </Button>
-                            </form>
-                        </div>
-                        <div className="w-full md:w-1/3">
-                            <Select value={status} onValueChange={handleStatusChange}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="상태 필터" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="">모든 상태</SelectItem>
-                                    <SelectItem value={APPLICATION_STATUS.PENDING}>대기 중</SelectItem>
-                                    <SelectItem value={APPLICATION_STATUS.ACCEPTED}>승인됨</SelectItem>
-                                    <SelectItem value={APPLICATION_STATUS.REJECTED}>거절됨</SelectItem>
-                                    <SelectItem value={APPLICATION_STATUS.COMPLETED}>완료됨</SelectItem>
-                                    <SelectItem value={APPLICATION_STATUS.CANCELLED}>취소됨</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        {initialCampaignId && (
-                            <div className="flex-1 flex justify-end">
-                                <Button variant="outline" asChild>
-                                    <Link to="/admin/applications">모든 신청 보기</Link>
-                                </Button>
-                            </div>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardContent className="p-0">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>신청 ID</TableHead>
                                 <TableHead>인플루언서</TableHead>
                                 <TableHead>캠페인</TableHead>
-                                <TableHead>신청일</TableHead>
                                 <TableHead>상태</TableHead>
+                                <TableHead>신청일</TableHead>
                                 <TableHead className="text-right">작업</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {applications.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                                        신청 내역이 없습니다.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                applications.map((application) => (
+                            {applications.length > 0 ? (
+                                applications.map((application: any) => (
                                     <TableRow key={application.application_id}>
-                                        <TableCell className="font-medium">
-                                            <Link
-                                                to={`/admin/applications/${application.application_id}?campaignId=${application.campaign_id}`}
-                                                className="text-blue-600 hover:underline"
-                                            >
-                                                {application.application_id.substring(0, 8)}...
+                                        <TableCell>
+                                            <div>
+                                                <div className="font-medium">{application.influencer?.name || '인플루언서'}</div>
+                                                <div className="text-sm text-gray-500">{application.influencer?.username || ''}</div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Link to={`/admin/campaigns/${application.campaign_id}`} className="hover:underline">
+                                                {application.campaign?.title || '캠페인'}
                                             </Link>
                                         </TableCell>
                                         <TableCell>
-                                            <div className="flex flex-col">
-                                                <span className="font-medium">{application.influencer?.name || "이름 없음"}</span>
-                                                <span className="text-xs text-gray-500">@{application.influencer?.username || "사용자명 없음"}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col max-w-xs">
-                                                <span className="font-medium truncate">{application.campaign?.title || "제목 없음"}</span>
-                                                <span className="text-xs text-gray-500">
-                                                    {application.campaign?.budget?.toLocaleString() || "0"}원
-                                                </span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{formatDate(application.applied_at)}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline">
+                                            <Badge variant={getStatusBadgeVariant(application.application_status)}>
                                                 {application.application_status}
                                             </Badge>
                                         </TableCell>
+                                        <TableCell>{formatDate(application.created_at)}</TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" size="icon">
                                                         <MoreHorizontal className="h-4 w-4" />
+                                                        <span className="sr-only">메뉴</span>
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuItem asChild>
-                                                        <Link to={`/admin/applications/${application.application_id}?campaignId=${application.campaign_id}`}>
+                                                        <Link to={`/admin/applications/${application.application_id}`}>
                                                             상세 보기
                                                         </Link>
                                                     </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
                                                     {application.application_status === APPLICATION_STATUS.PENDING && (
                                                         <>
                                                             <DropdownMenuItem
                                                                 onClick={() => handleStatusUpdate(application.application_id, APPLICATION_STATUS.ACCEPTED)}
                                                                 disabled={isSubmitting}
                                                             >
-                                                                승인하기
+                                                                승인
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem
                                                                 onClick={() => handleStatusUpdate(application.application_id, APPLICATION_STATUS.REJECTED)}
                                                                 disabled={isSubmitting}
-                                                                className="text-red-600"
                                                             >
-                                                                거절하기
+                                                                거절
                                                             </DropdownMenuItem>
                                                         </>
-                                                    )}
-                                                    {application.application_status === APPLICATION_STATUS.ACCEPTED && (
-                                                        <DropdownMenuItem
-                                                            onClick={() => handleStatusUpdate(application.application_id, APPLICATION_STATUS.COMPLETED)}
-                                                            disabled={isSubmitting}
-                                                        >
-                                                            완료 처리하기
-                                                        </DropdownMenuItem>
                                                     )}
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center py-4">
+                                        신청 내역이 없습니다.
+                                    </TableCell>
+                                </TableRow>
                             )}
                         </TableBody>
                     </Table>
+
+                    {/* 페이지네이션 */}
+                    {totalPages > 1 && (
+                        <div className="flex justify-center mt-6">
+                            <div className="flex space-x-2">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    disabled={currentPage === 1}
+                                    onClick={() => {
+                                        const url = new URL(window.location.href);
+                                        url.searchParams.set("page", (currentPage - 1).toString());
+                                        window.location.href = url.toString();
+                                    }}
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                {paginationRange().map((page) => (
+                                    <Button
+                                        key={page}
+                                        variant={currentPage === page ? "default" : "outline"}
+                                        onClick={() => {
+                                            if (currentPage !== page) {
+                                                const url = new URL(window.location.href);
+                                                url.searchParams.set("page", page.toString());
+                                                window.location.href = url.toString();
+                                            }
+                                        }}
+                                    >
+                                        {page}
+                                    </Button>
+                                ))}
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    disabled={currentPage === totalPages}
+                                    onClick={() => {
+                                        const url = new URL(window.location.href);
+                                        url.searchParams.set("page", (currentPage + 1).toString());
+                                        window.location.href = url.toString();
+                                    }}
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
-
-            {totalPages > 1 && (
-                <div className="flex justify-center mt-6">
-                    <div className="flex items-center gap-2">
-                        {currentPage > 1 && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                    const url = new URL(window.location.href);
-                                    url.searchParams.set("page", String(currentPage - 1));
-                                    window.location.href = url.toString();
-                                }}
-                            >
-                                이전
-                            </Button>
-                        )}
-
-                        {paginationRange().map((page) => (
-                            <Button
-                                key={page}
-                                variant={page === currentPage ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => {
-                                    const url = new URL(window.location.href);
-                                    url.searchParams.set("page", String(page));
-                                    window.location.href = url.toString();
-                                }}
-                            >
-                                {page}
-                            </Button>
-                        ))}
-
-                        {currentPage < totalPages && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                    const url = new URL(window.location.href);
-                                    url.searchParams.set("page", String(currentPage + 1));
-                                    window.location.href = url.toString();
-                                }}
-                            >
-                                다음
-                            </Button>
-                        )}
-                    </div>
-                </div>
-            )}
         </div>
     );
 } 

@@ -1,19 +1,28 @@
 import type { Database } from "database-generated.types";
-import { Link, redirect } from "react-router";
+import { Form, Link, redirect } from "react-router";
 import { APPLICATION_STATUS } from "~/features/campaigns/constants";
-import type { Route } from "./+types/application-detail-page";
+import type { Route } from ".react-router/types/app/features/campaigns/pages/admin/+types/application-detail-page";
 
-import { Calendar, Clock, DollarSign, FileText, Instagram, Video, Youtube } from "lucide-react";
-import { Avatar, AvatarFallback } from "~/common/components/ui/avatar";
+import {
+    AlertCircle,
+    ArrowLeft,
+    CheckCircle,
+} from "lucide-react";
+import { DateTime } from "luxon";
+import { useState } from "react";
+import {
+    Alert,
+    AlertDescription,
+    AlertTitle,
+} from "~/common/components/ui/alert";
 import { Badge } from "~/common/components/ui/badge";
 import { Button } from "~/common/components/ui/button";
 import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
-    CardTitle,
+    CardTitle
 } from "~/common/components/ui/card";
 import { Label } from "~/common/components/ui/label";
 import {
@@ -23,33 +32,30 @@ import {
     SelectTrigger,
     SelectValue,
 } from "~/common/components/ui/select";
-import { Separator } from "~/common/components/ui/separator";
 import { Textarea } from "~/common/components/ui/textarea";
 import { getServerClient } from "~/server";
 
 export const loader = async ({ params, request }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
     const applicationId = params.applicationId;
-    const campaignId = params.campaignId;
 
-    if (!applicationId || !campaignId) {
+    if (!applicationId) {
         return redirect("/admin/applications");
     }
 
     // 신청 정보 가져오기
-    const { data: application, error: applicationError } = await supabase
+    const { data: application, error } = await supabase
         .from('applications')
         .select(`
-      *,
-      campaign:campaigns(*),
-      influencer:profiles(*)
-    `)
+            *,
+            campaign:campaigns(*),
+            influencer:profiles(*)
+        `)
         .eq('application_id', applicationId)
-        .eq('campaign_id', campaignId)
         .single();
 
-    if (applicationError || !application) {
-        console.error("Error fetching application:", applicationError);
+    if (error) {
+        console.error("Error fetching application:", error);
         return redirect("/admin/applications");
     }
 
@@ -89,11 +95,23 @@ export const action = async ({ params, request }: Route.ActionArgs) => {
         }
 
         try {
+            // 먼저 신청 정보를 가져옵니다
+            const { data: application, error: fetchError } = await supabase
+                .from('applications')
+                .select('*')
+                .eq('application_id', applicationId)
+                .single();
+
+            if (fetchError || !application) {
+                console.error("Error fetching application:", fetchError);
+                return { error: "신청 정보를 가져오는데 실패했습니다." };
+            }
+
+            // 상태 업데이트
             const { error } = await supabase
                 .from('applications')
                 .update({
                     application_status: newStatus as Database["public"]["Enums"]["application_status"],
-                    admin_comment: adminComment,
                     updated_at: new Date().toISOString()
                 })
                 .eq('application_id', applicationId);
@@ -103,10 +121,44 @@ export const action = async ({ params, request }: Route.ActionArgs) => {
                 return { error: "상태 업데이트 중 오류가 발생했습니다." };
             }
 
-            return { success: true, message: "신청 상태가 업데이트되었습니다." };
+            // 어드민 코멘트가 있는 경우 저장
+            if (adminComment && adminComment.trim() !== '') {
+                // 현재 로그인한 관리자 정보 가져오기
+                const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+                if (sessionError) {
+                    console.error("Error getting session:", sessionError);
+                    return { error: "세션 정보를 가져오는데 실패했습니다." };
+                }
+
+                const adminId = sessionData.session?.user.id;
+
+                if (!adminId) {
+                    console.error("Admin ID not found");
+                    return { error: "관리자 ID를 찾을 수 없습니다." };
+                }
+
+                // 어드민 코멘트 저장
+                const { error: commentError } = await supabase
+                    .from('campaign_admin_comments')
+                    .insert({
+                        campaign_id: application.campaign_id,
+                        admin_id: adminId,
+                        comment: adminComment,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
+
+                if (commentError) {
+                    console.error("Error saving admin comment:", commentError);
+                    return { error: "어드민 코멘트 저장에 실패했습니다." };
+                }
+            }
+
+            return { success: true, message: "신청 상태가 성공적으로 업데이트되었습니다." };
         } catch (error) {
-            console.error("Error updating application status:", error);
-            return { error: "상태 업데이트 중 오류가 발생했습니다." };
+            console.error("Error:", error);
+            return { error: "처리 중 오류가 발생했습니다." };
         }
     }
 
@@ -115,8 +167,15 @@ export const action = async ({ params, request }: Route.ActionArgs) => {
 
 export const meta: Route.MetaFunction = () => {
     return [
-        { title: "관리자 - 캠페인 신청 상세 | 인플루언서 플랫폼" },
-        { name: "description", content: "캠페인 신청 상세 정보를 확인합니다" },
+        { title: "신청 상세 정보 - 관리자" },
+        {
+            property: "og:title",
+            content: "신청 상세 정보 - 관리자",
+        },
+        {
+            name: "description",
+            content: "신청 상세 정보 - 관리자",
+        },
     ];
 };
 
@@ -124,73 +183,69 @@ export const meta: Route.MetaFunction = () => {
 const getStatusBadgeVariant = (status: string) => {
     switch (status) {
         case APPLICATION_STATUS.PENDING:
-            return "warning";
+            return "outline" as const;
         case APPLICATION_STATUS.ACCEPTED:
-            return "success";
+            return "success" as const;
         case APPLICATION_STATUS.REJECTED:
-            return "destructive";
+            return "destructive" as const;
         case APPLICATION_STATUS.COMPLETED:
-            return "secondary";
+            return "secondary" as const;
         case APPLICATION_STATUS.CANCELLED:
-            return "default";
+            return "default" as const;
         default:
-            return "default";
+            return "default" as const;
     }
 };
 
 // 날짜 포맷팅 함수
 const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    }).format(date);
+    if (!dateString) return "-";
+    return DateTime.fromISO(dateString).toFormat('yyyy년 MM월 dd일');
 };
 
 // 날짜 및 시간 포맷팅 함수
 const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    }).format(date);
+    if (!dateString) return "-";
+    return DateTime.fromISO(dateString).toFormat('yyyy년 MM월 dd일 HH:mm');
 };
 
 export default function ApplicationDetailAdminPage({ loaderData, actionData }: Route.ComponentProps) {
     const { application, socialAccounts } = loaderData;
+    const [status, setStatus] = useState(application.application_status);
+    const [adminComment, setAdminComment] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     return (
-        <div className="container mx-auto py-8">
-            {actionData?.success && (
-                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                    {actionData.message}
-                </div>
-            )}
-
-            {actionData?.error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    {actionData.error}
-                </div>
-            )}
-
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h1 className="text-2xl font-bold">신청 상세 정보</h1>
-                    <p className="text-gray-500">캠페인: {application.campaign?.title || "제목 없음"}</p>
-                </div>
+        <div className="container mx-auto py-6">
+            <div className="mb-6">
                 <Button variant="outline" asChild>
-                    <Link to="/admin/applications">목록으로 돌아가기</Link>
+                    <Link to="/admin/applications">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        신청 목록으로 돌아가기
+                    </Link>
                 </Button>
             </div>
 
+            {actionData?.success && (
+                <Alert className="mb-6">
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertTitle>성공</AlertTitle>
+                    <AlertDescription>{actionData.message}</AlertDescription>
+                </Alert>
+            )}
+
+            {actionData?.error && (
+                <Alert className="mb-6" variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>오류</AlertTitle>
+                    <AlertDescription>{actionData.error}</AlertDescription>
+                </Alert>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-2 space-y-6">
+                <div className="md:col-span-2">
                     <Card>
-                        <CardHeader className="pb-2">
+                        <CardHeader>
                             <div className="flex justify-between items-start">
                                 <div>
                                     <CardTitle>신청 상세 정보</CardTitle>
@@ -198,172 +253,121 @@ export default function ApplicationDetailAdminPage({ loaderData, actionData }: R
                                         신청 ID: {application.application_id}
                                     </CardDescription>
                                 </div>
-                                <Badge variant="outline">
+                                <Badge variant={getStatusBadgeVariant(application.application_status)}>
                                     {application.application_status}
                                 </Badge>
                             </div>
                         </CardHeader>
-
                         <CardContent className="space-y-6">
                             <div>
-                                <h3 className="text-lg font-semibold mb-2">신청 내용</h3>
-                                <p className="whitespace-pre-wrap text-gray-700">
-                                    {application.message || "신청 메시지가 없습니다."}
-                                </p>
-                            </div>
-
-                            <Separator />
-
-                            <div>
-                                <h3 className="text-lg font-semibold mb-2">관리자 코멘트</h3>
-                                <p className="whitespace-pre-wrap text-gray-700">
-                                    {"관리자 코멘트가 없습니다."}
-                                </p>
-                            </div>
-
-                            <Separator />
-
-                            <div>
-                                <h3 className="text-lg font-semibold mb-2">신청 정보</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="flex items-center">
-                                        <Calendar className="h-5 w-5 text-gray-500 mr-2" />
+                                <h3 className="text-lg font-medium">캠페인 정보</h3>
+                                <div className="mt-2 p-4 border rounded-md">
+                                    <div className="flex justify-between items-start">
                                         <div>
-                                            <p className="text-sm text-gray-500">신청일</p>
-                                            <p className="font-medium">{formatDateTime(application.applied_at)}</p>
+                                            <h4 className="font-medium">{application.campaign?.title || '캠페인'}</h4>
+                                            <p className="text-sm text-gray-500">
+                                                예산: {application.campaign?.budget?.toLocaleString() || '0'}원
+                                            </p>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <Clock className="h-5 w-5 text-gray-500 mr-2" />
-                                        <div>
-                                            <p className="text-sm text-gray-500">최종 업데이트</p>
-                                            <p className="font-medium">{formatDateTime(application.updated_at)}</p>
-                                        </div>
+                                        <Button variant="outline" asChild size="sm">
+                                            <Link to={`/admin/campaigns/${application.campaign_id}`}>
+                                                캠페인 보기
+                                            </Link>
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
-                        </CardContent>
-                        <CardFooter>
-                            {application.application_status === APPLICATION_STATUS.PENDING && (
-                                <form method="post" className="w-full space-y-4">
-                                    <input type="hidden" name="_action" value="updateStatus" />
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <div>
+                                <h3 className="text-lg font-medium">인플루언서 정보</h3>
+                                <div className="mt-2 p-4 border rounded-md">
+                                    <div className="flex justify-between items-start">
                                         <div>
-                                            <Label htmlFor="status">상태 변경</Label>
-                                            <Select name="status" defaultValue={APPLICATION_STATUS.PENDING}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="상태 선택" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value={APPLICATION_STATUS.ACCEPTED}>승인</SelectItem>
-                                                    <SelectItem value={APPLICATION_STATUS.REJECTED}>거절</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                            <h4 className="font-medium">{application.influencer?.name || '인플루언서'}</h4>
+                                            <p className="text-sm text-gray-500">@{application.influencer?.username || ''}</p>
                                         </div>
                                     </div>
-                                    <div>
-                                        <Label htmlFor="adminComment">관리자 코멘트</Label>
-                                        <Textarea
-                                            name="adminComment"
-                                            placeholder="신청에 대한 코멘트를 입력하세요"
-                                            defaultValue={""}
-                                            className="min-h-[100px]"
-                                        />
-                                    </div>
-                                    <div className="flex justify-end space-x-2">
-                                        <Button type="submit">상태 업데이트</Button>
-                                    </div>
-                                </form>
-                            )}
+                                    {socialAccounts && socialAccounts.length > 0 && (
+                                        <div className="mt-4 grid grid-cols-2 gap-4">
+                                            {socialAccounts.map((account: any) => (
+                                                <div key={account.stat_id} className="p-2 bg-gray-50 rounded">
+                                                    <div className="text-sm font-medium">{account.platform}</div>
+                                                    <div className="text-sm">팔로워: {account.followers?.toLocaleString() || '0'}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
 
-                            {application.application_status === APPLICATION_STATUS.ACCEPTED && (
-                                <form method="post" className="w-full space-y-4">
-                                    <input type="hidden" name="_action" value="updateStatus" />
-                                    <input type="hidden" name="status" value={APPLICATION_STATUS.COMPLETED} />
-                                    <div>
-                                        <Label htmlFor="adminComment">관리자 코멘트</Label>
-                                        <Textarea
-                                            name="adminComment"
-                                            placeholder="완료 코멘트를 입력하세요"
-                                            defaultValue={""}
-                                            className="min-h-[100px]"
-                                        />
-                                    </div>
-                                    <div className="flex justify-end space-x-2">
-                                        <Button type="submit">완료 처리</Button>
-                                    </div>
-                                </form>
-                            )}
-                        </CardFooter>
+                            <div>
+                                <h3 className="text-lg font-medium">신청 메시지</h3>
+                                <div className="mt-2 p-4 border rounded-md">
+                                    <p className="whitespace-pre-line">{application.message || '메시지 없음'}</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-500">신청일</h3>
+                                    <p>{formatDate(application.applied_at)}</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-500">마지막 업데이트</h3>
+                                    <p>{formatDateTime(application.updated_at)}</p>
+                                </div>
+                            </div>
+                        </CardContent>
                     </Card>
                 </div>
 
                 <div>
                     <Card>
                         <CardHeader>
-                            <CardTitle>인플루언서 정보</CardTitle>
+                            <CardTitle>상태 관리</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-center space-x-4">
-                                <Avatar className="h-12 w-12">
-                                    <AvatarFallback>{application.influencer?.name?.charAt(0) || "U"}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="font-medium">{application.influencer?.name || "이름 없음"}</p>
-                                    <p className="text-sm text-gray-500">@{application.influencer?.username || "사용자명 없음"}</p>
+                        <CardContent>
+                            <Form method="post" onSubmit={() => setIsSubmitting(true)}>
+                                <input type="hidden" name="_action" value="updateStatus" />
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="status">상태</Label>
+                                        <Select
+                                            name="status"
+                                            value={status}
+                                            onValueChange={(value) => setStatus(value as Database["public"]["Enums"]["application_status"])}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="상태 선택" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {Object.values(APPLICATION_STATUS).map((status) => (
+                                                    <SelectItem key={status} value={status}>
+                                                        {status}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="adminComment">관리자 코멘트</Label>
+                                        <Textarea
+                                            id="adminComment"
+                                            name="adminComment"
+                                            value={adminComment}
+                                            onChange={(e) => setAdminComment(e.target.value)}
+                                            placeholder="상태 변경에 대한 코멘트를 입력하세요"
+                                            rows={3}
+                                        />
+                                        <p className="text-sm text-gray-500">
+                                            이 코멘트는 내부 관리용으로만 사용되며, 인플루언서에게는 표시되지 않습니다.
+                                        </p>
+                                    </div>
+                                    <Button type="submit" disabled={isSubmitting}>
+                                        {isSubmitting ? "저장 중..." : "상태 업데이트"}
+                                    </Button>
                                 </div>
-                            </div>
-
-                            <Separator />
-
-                            <div>
-                                <h3 className="text-sm font-medium mb-2">SNS 계정</h3>
-                                <div className="space-y-2">
-                                    {socialAccounts && socialAccounts.length > 0 ? (
-                                        socialAccounts.map((account, index) => (
-                                            <div key={index} className="flex items-center">
-                                                {account.platform === "INSTAGRAM" && <Instagram className="h-4 w-4 mr-2" />}
-                                                {account.platform === "YOUTUBE" && <Youtube className="h-4 w-4 mr-2" />}
-                                                {account.platform === "TIKTOK" && <Video className="h-4 w-4 mr-2" />}
-                                                {account.platform === "BLOG" && <FileText className="h-4 w-4 mr-2" />}
-                                                <span className="text-sm">{account.platform}: {account.followers_count.toLocaleString()} 팔로워</span>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className="text-sm text-gray-500">등록된 SNS 계정이 없습니다.</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            <Separator />
-
-                            <Button variant="outline" asChild className="w-full">
-                                <Link to={`/admin/influencers/${application.influencer_id}`}>인플루언서 프로필 보기</Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="mt-4">
-                        <CardHeader>
-                            <CardTitle>캠페인 정보</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <h3 className="font-medium">{application.campaign?.title || "제목 없음"}</h3>
-                            <p className="text-sm text-gray-700 line-clamp-3">{application.campaign?.description || "설명 없음"}</p>
-
-                            <Separator />
-
-                            <div className="flex items-center">
-                                <DollarSign className="h-5 w-5 text-gray-500 mr-2" />
-                                <div>
-                                    <p className="text-sm text-gray-500">예산</p>
-                                    <p className="font-medium">{application.campaign?.budget?.toLocaleString() || "0"}원</p>
-                                </div>
-                            </div>
-
-                            <Button variant="outline" asChild className="w-full">
-                                <Link to={`/admin/campaigns/${application.campaign_id}`}>캠페인 상세 보기</Link>
-                            </Button>
+                            </Form>
                         </CardContent>
                     </Card>
                 </div>

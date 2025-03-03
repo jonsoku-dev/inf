@@ -33,6 +33,7 @@ import {
 import { Textarea } from "~/common/components/ui/textarea";
 import { getServerClient } from "~/server";
 import type { Route } from "./+types/new-page";
+import { DateTime } from "luxon";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
     const { supabase } = getServerClient(request);
@@ -59,13 +60,20 @@ export const action = async ({ request }: Route.ActionArgs) => {
     const description = formData.get("description") as string;
     const advertiserId = formData.get("advertiserId") as string;
     const budget = parseInt(formData.get("budget") as string);
-    const startDate = formData.get("startDate") as string;
-    const endDate = formData.get("endDate") as string;
+    const startDateStr = formData.get("startDate") as string;
+    const endDateStr = formData.get("endDate") as string;
+
+    // Luxon을 사용하여 날짜 형식 변환
+    const startDate = DateTime.fromISO(startDateStr).toISODate();
+    const endDate = DateTime.fromISO(endDateStr).toISODate();
+
     const targetMarket = formData.get("targetMarket") as Database["public"]["Enums"]["target_market"];
     const requirements = formData.get("requirements") as string;
-    const maxInfluencers = formData.get("maxInfluencers") as string;
+    const requirementsArray = requirements ? [requirements] : [];
+    const maxInfluencers = parseInt(formData.get("maxInfluencers") as string) || null;
     const campaignStatus = formData.get("campaignStatus") as Database["public"]["Enums"]["campaign_status"];
-    const campaignType = CAMPAIGN_TYPE.INSTAGRAM; // 기본값 설정
+    const isNegotiable = formData.get("is_negotiable") === "on";
+    const isUrgent = formData.get("is_urgent") === "on";
 
     // 필수 필드 검증
     if (!title || !description || !advertiserId || !budget || !startDate || !endDate || !targetMarket || !campaignStatus) {
@@ -73,9 +81,6 @@ export const action = async ({ request }: Route.ActionArgs) => {
     }
 
     try {
-        // 요구사항을 배열로 변환
-        const requirementsArray: string[] = requirements ? [requirements] : [];
-
         // 빈 카테고리와 키워드 배열 (필수 필드)
         const emptyCategories: string[] = [];
         const emptyKeywords: string[] = [];
@@ -91,9 +96,9 @@ export const action = async ({ request }: Route.ActionArgs) => {
                 end_date: endDate,
                 target_market: targetMarket,
                 requirements: requirementsArray,
-                max_applications: maxInfluencers ? parseInt(maxInfluencers) : null,
+                max_applications: maxInfluencers,
                 campaign_status: campaignStatus,
-                campaign_type: campaignType,
+                campaign_type: CAMPAIGN_TYPE.INSTAGRAM,
                 categories: emptyCategories,
                 keywords: emptyKeywords,
                 created_at: new Date().toISOString(),
@@ -152,6 +157,10 @@ export default function NewCampaignAdminPage({ loaderData, actionData }: {
         const form = e.target as HTMLFormElement;
         form.submit();
     };
+
+    // 오늘 날짜를 기본값으로 설정
+    const today = DateTime.now().toISODate();
+    const nextMonth = DateTime.now().plus({ months: 1 }).toISODate();
 
     return (
         <div className="container mx-auto py-8">
@@ -270,68 +279,23 @@ export default function NewCampaignAdminPage({ loaderData, actionData }: {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <Label>시작일 *</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            className="w-full justify-start text-left font-normal"
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {startDate ? (
-                                                format(startDate, "PPP", { locale: ko })
-                                            ) : (
-                                                <span>시작일 선택</span>
-                                            )}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                        <Calendar
-                                            mode="single"
-                                            selected={startDate}
-                                            onSelect={(date) => setStartDate(date)}
-                                            initialFocus
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                                <input
-                                    type="hidden"
+                                <Label htmlFor="startDate">시작일</Label>
+                                <Input
+                                    id="startDate"
                                     name="startDate"
-                                    value={startDate ? startDate.toISOString() : ""}
+                                    type="date"
+                                    defaultValue={today}
+                                    required
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>종료일 *</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            className="w-full justify-start text-left font-normal"
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {endDate ? (
-                                                format(endDate, "PPP", { locale: ko })
-                                            ) : (
-                                                <span>종료일 선택</span>
-                                            )}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                        <Calendar
-                                            mode="single"
-                                            selected={endDate}
-                                            onSelect={(date) => setEndDate(date)}
-                                            initialFocus
-                                            disabled={(date) =>
-                                                startDate ? date < startDate : false
-                                            }
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                                <input
-                                    type="hidden"
+                                <Label htmlFor="endDate">종료일</Label>
+                                <Input
+                                    id="endDate"
                                     name="endDate"
-                                    value={endDate ? endDate.toISOString() : ""}
+                                    type="date"
+                                    defaultValue={nextMonth}
+                                    required
                                 />
                             </div>
                         </div>

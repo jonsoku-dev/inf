@@ -94,5 +94,6 @@ export const applications = pgTable("applications", {
         .default(APPLICATION_STATUS.PENDING),
     message: text("message").notNull(),
     applied_at: timestamp("applied_at").notNull().defaultNow(),
+    created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
 }); 
