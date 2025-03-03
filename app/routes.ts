@@ -152,12 +152,12 @@ export default [
             route("/:id", "features/proposals/pages/admin/detail-page.tsx"),
         ]),
 
-        // // 인플루언서 관리 페이지
-        // ...prefix("/influencers", [
-        //     index("features/influencers/pages/admin/list-page.tsx"),
-        //     route("/:id", "features/influencers/pages/admin/detail-page.tsx"),
-        //     route("/:id/verification", "features/influencers/pages/admin/verification-page.tsx"),
-        // ]),
+        // 인플루언서 관리 페이지
+        ...prefix("/influencers", [
+            index("features/influencers/pages/admin/list-page.tsx"),
+            route("/:id", "features/influencers/pages/admin/detail-page.tsx"),
+            route("/:id/verification", "features/influencers/pages/admin/verification-page.tsx"),
+        ]),
 
         // // 사용자 관리 페이지
         // ...prefix("/users", [

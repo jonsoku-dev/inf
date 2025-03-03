@@ -50,4 +50,18 @@ export const INFLUENCER_CATEGORY_LABELS: Record<keyof typeof INFLUENCER_CATEGORY
     PARENTING: "육아",
     PETS: "반려동물",
     OTHER: "기타"
-}; 
+};
+
+// 한국, 일본, 한국/일본
+
+export const LOCATION = {
+    KOREA: "KOREA",
+    JAPAN: "JAPAN",
+    KOREA_JAPAN: "KOREA_JAPAN",
+};
+
+export const LOCATION_LABELS: Record<keyof typeof LOCATION, string> = {
+    KOREA: "한국",
+    JAPAN: "일본",
+    KOREA_JAPAN: "한국/일본",
+};
